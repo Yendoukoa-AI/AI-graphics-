@@ -27,6 +27,14 @@ app.post('/api/generate', async (req, res) => {
     return res.status(400).json({ error: 'Prompt and mode are required' });
   }
 
+  const keywords = `${mode},${prompt}`.replace(/\s+/g, ',');
+  let imageUrl = `https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`;
+  let videoUrl = mode === 'video' ? 'https://www.w3schools.com/html/mov_bbb.mp4' : null;
+
+  if (videoUrl) {
+    imageUrl = null;
+  }
+
   try {
     let insight = '';
 
@@ -42,20 +50,18 @@ app.post('/api/generate', async (req, res) => {
       insight = `Simulated insight for ${mode}: Great choice! This will look amazing.`;
     }
 
-    const keywords = `${mode},${prompt}`.replace(/\s+/g, ',');
-    const imageUrl = `https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`;
-
     res.json({
       imageUrl,
+      videoUrl,
       insight,
       mode
     });
   } catch (error) {
     console.error('Error with Google AI API:', error);
     // Fallback to simple response if AI fails
-    const keywords = `${mode},${prompt}`.replace(/\s+/g, ',');
     res.json({
-      imageUrl: `https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`,
+      imageUrl,
+      videoUrl,
       insight: `Design insight: Focus on balance and typography for your ${mode} project.`,
       mode,
       error: 'Google AI API error, using fallback'

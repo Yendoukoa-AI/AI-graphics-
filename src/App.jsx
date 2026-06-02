@@ -5,12 +5,34 @@ function App() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [previewVideo, setPreviewVideo] = useState(null);
   const [aiInsight, setAiInsight] = useState('');
   const [mode, setMode] = useState('web');
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'DesignAI Studio Generation',
+      text: `Check out this ${mode} I generated with DesignAI Studio: ${prompt}`,
+      url: previewVideo || previewImage || window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        alert('Link copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!prompt) return;
     setIsGenerating(true);
+    setPreviewImage(null);
+    setPreviewVideo(null);
     const API_URL = import.meta.env.VITE_API_URL || '';
     try {
       const response = await fetch(`${API_URL}/api/generate`, {
@@ -24,6 +46,9 @@ function App() {
       if (data.imageUrl) {
         setPreviewImage(data.imageUrl);
       }
+      if (data.videoUrl) {
+        setPreviewVideo(data.videoUrl);
+      }
       if (data.insight) {
         setAiInsight(data.insight);
       }
@@ -31,7 +56,11 @@ function App() {
       console.error('Error generating design:', error);
       // Fallback for demo if backend is not running
       const keywords = `${mode},${prompt}`.replace(/\s+/g, ',');
-      setPreviewImage(`https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`);
+      if (mode === 'video') {
+        setPreviewVideo('https://www.w3schools.com/html/mov_bbb.mp4');
+      } else {
+        setPreviewImage(`https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -74,6 +103,11 @@ function App() {
           <span className="card-icon">🖼️</span>
           <h3>Affiches & Posters</h3>
           <p>Create stunning public posters and advertisements with automated typography and layout balancing.</p>
+        </div>
+        <div className="card">
+          <span className="card-icon">🎬</span>
+          <h3>AI Video Generation</h3>
+          <p>Bring your designs to life with AI-powered video generation. Create dynamic content for social media and marketing.</p>
         </div>
       </section>
 
@@ -153,6 +187,12 @@ function App() {
             <img src="https://loremflickr.com/400/300/logo,branding" alt="Graphic Design" />
             <div className="showcase-info">Branding</div>
           </div>
+          <div className="showcase-item">
+            <video className="showcase-video" autoPlay muted loop>
+              <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+            </video>
+            <div className="showcase-info">AI Video</div>
+          </div>
         </div>
       </section>
 
@@ -180,6 +220,12 @@ function App() {
             >
               Poster
             </button>
+            <button
+              className={`mode-btn ${mode === 'video' ? 'active' : ''}`}
+              onClick={() => setMode('video')}
+            >
+              AI Video
+            </button>
           </div>
           <div className="editor-controls">
             <input
@@ -188,7 +234,8 @@ function App() {
               placeholder={
                 mode === 'web' ? "e.g., Landing page for tech startup" :
                 mode === 'photo' ? "e.g., Cyberpunk portrait effect" :
-                "e.g., Event poster for jazz concert"
+                mode === 'poster' ? "e.g., Event poster for jazz concert" :
+                "e.g., Dynamic product showcase video"
               }
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
@@ -209,12 +256,23 @@ function App() {
                 <p>AI is thinking...</p>
               </div>
             )}
-            {previewImage ? (
+            {previewImage || previewVideo ? (
               <div className="preview-container">
-                <img src={previewImage} alt="Generated Design" className="placeholder-img" />
+                {previewImage && <img src={previewImage} alt="Generated Design" className="placeholder-img" />}
+                {previewVideo && (
+                  <video controls className="placeholder-video" autoPlay muted loop>
+                    <source src={previewVideo} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                )}
                 {aiInsight && (
                   <div className="ai-insight-box">
-                    <h4>AI Insight</h4>
+                    <div className="insight-header">
+                      <h4>AI Insight</h4>
+                      <button className="share-btn" onClick={handleShare}>
+                        <span className="share-icon">📤</span> Share
+                      </button>
+                    </div>
                     <p>{aiInsight}</p>
                   </div>
                 )}
