@@ -5,6 +5,7 @@ function App() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [aiInsight, setAiInsight] = useState('');
   const [mode, setMode] = useState('web');
 
   const handleGenerate = async () => {
@@ -22,6 +23,9 @@ function App() {
       const data = await response.json();
       if (data.imageUrl) {
         setPreviewImage(data.imageUrl);
+      }
+      if (data.insight) {
+        setAiInsight(data.insight);
       }
     } catch (error) {
       console.error('Error generating design:', error);
@@ -206,7 +210,15 @@ function App() {
               </div>
             )}
             {previewImage ? (
-              <img src={previewImage} alt="Generated Design" className="placeholder-img" />
+              <div className="preview-container">
+                <img src={previewImage} alt="Generated Design" className="placeholder-img" />
+                {aiInsight && (
+                  <div className="ai-insight-box">
+                    <h4>AI Insight</h4>
+                    <p>{aiInsight}</p>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="empty-state">
                 <p>Your AI generation will appear here</p>
