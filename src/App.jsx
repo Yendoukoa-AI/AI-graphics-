@@ -7,15 +7,30 @@ function App() {
   const [previewImage, setPreviewImage] = useState(null);
   const [mode, setMode] = useState('web');
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!prompt) return;
     setIsGenerating(true);
-    // Simulate AI generation delay
-    setTimeout(() => {
-      setIsGenerating(false);
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    try {
+      const response = await fetch(`${API_URL}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt, mode }),
+      });
+      const data = await response.json();
+      if (data.imageUrl) {
+        setPreviewImage(data.imageUrl);
+      }
+    } catch (error) {
+      console.error('Error generating design:', error);
+      // Fallback for demo if backend is not running
       const keywords = `${mode},${prompt}`.replace(/\s+/g, ',');
       setPreviewImage(`https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`);
-    }, 2000);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -25,9 +40,13 @@ function App() {
         <div className="nav-links">
           <a href="#features">Features</a>
           <a href="#editor">Editor</a>
+          <a href="#pricing">Pricing</a>
           <a href="#showcase">Showcase</a>
         </div>
-        <button className="cta-button">Get Started</button>
+        <div className="nav-actions">
+          <button className="sponsor-button">Sponsor</button>
+          <button className="cta-button">Get Started</button>
+        </div>
       </nav>
 
       <header className="hero">
@@ -51,6 +70,63 @@ function App() {
           <span className="card-icon">🖼️</span>
           <h3>Affiches & Posters</h3>
           <p>Create stunning public posters and advertisements with automated typography and layout balancing.</p>
+        </div>
+      </section>
+
+      <section id="pricing" className="pricing">
+        <h2>Simple, Transparent Pricing</h2>
+        <div className="pricing-grid">
+          <div className="pricing-card">
+            <h3>Free</h3>
+            <div className="price">$0<span>/month</span></div>
+            <ul>
+              <li>5 Generations per month</li>
+              <li>Basic Web Design templates</li>
+              <li>Standard Image Quality</li>
+            </ul>
+            <button className="pricing-btn">Start for Free</button>
+          </div>
+          <div className="pricing-card popular">
+            <div className="badge">Most Popular</div>
+            <h3>Pro</h3>
+            <div className="price">$29<span>/month</span></div>
+            <ul>
+              <li>Unlimited Generations</li>
+              <li>Advanced Photoshop tools</li>
+              <li>HD Export Options</li>
+              <li>Priority Support</li>
+            </ul>
+            <button className="pricing-btn primary">Upgrade to Pro</button>
+          </div>
+          <div className="pricing-card">
+            <h3>Enterprise</h3>
+            <div className="price">Custom</div>
+            <ul>
+              <li>Custom AI training</li>
+              <li>API Access</li>
+              <li>Team Collaboration</li>
+              <li>Dedicated Manager</li>
+            </ul>
+            <button className="pricing-btn">Contact Sales</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="sponsorship" className="sponsorship">
+        <div className="sponsorship-content">
+          <h2>Support Our Mission</h2>
+          <p>Help us keep DesignAI Studio free and open for everyone. Your sponsorship fuels the development of better AI models and more features.</p>
+          <div className="sponsorship-stats">
+            <div className="stat">
+              <span className="stat-value">500+</span>
+              <span className="stat-label">Contributors</span>
+            </div>
+            <div className="stat">
+              <span className="stat-value">$10k+</span>
+              <span className="stat-label">Raised</span>
+            </div>
+          </div>
+          <button className="sponsor-cta">Become a Sponsor</button>
         </div>
       </section>
 
