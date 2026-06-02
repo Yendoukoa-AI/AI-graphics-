@@ -5,11 +5,16 @@ function App() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [previewVideo, setPreviewVideo] = useState(null);
   const [mode, setMode] = useState('web');
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const videoRef = React.useRef(null);
 
   const handleGenerate = async () => {
     if (!prompt) return;
     setIsGenerating(true);
+    setPreviewImage(null);
+    setPreviewVideo(null);
     const API_URL = import.meta.env.VITE_API_URL || '';
     try {
       const response = await fetch(`${API_URL}/api/generate`, {
@@ -22,6 +27,8 @@ function App() {
       const data = await response.json();
       if (data.imageUrl) {
         setPreviewImage(data.imageUrl);
+      } else if (data.videoUrl) {
+        setPreviewVideo(data.videoUrl);
       }
     } catch (error) {
       console.error('Error generating design:', error);
@@ -30,6 +37,44 @@ function App() {
       setPreviewImage(`https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const toggleCamera = async () => {
+    if (isCameraOpen) {
+      const stream = videoRef.current.srcObject;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+      setIsCameraOpen(false);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoRef.current.srcObject = stream;
+        setIsCameraOpen(true);
+      } catch (err) {
+        console.error("Error accessing camera: ", err);
+        alert("Could not access camera. Please ensure you have given permission.");
+      }
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'DesignAI Studio Generation',
+      text: `Check out this ${mode} generation from DesignAI Studio: ${prompt}`,
+      url: previewVideo || previewImage || window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        alert('Link copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
     }
   };
 
@@ -176,8 +221,21 @@ function App() {
             >
               Poster
             </button>
+            <button
+              className={`mode-btn ${mode === 'video' ? 'active' : ''}`}
+              onClick={() => setMode('video')}
+            >
+              Video
+            </button>
           </div>
           <div className="editor-controls">
+            <button
+              className={`camera-toggle ${isCameraOpen ? 'active' : ''}`}
+              onClick={toggleCamera}
+              title={isCameraOpen ? "Close Camera" : "Open Camera"}
+            >
+              📷
+            </button>
             <input
               type="text"
               className="input-field"
@@ -205,12 +263,28 @@ function App() {
                 <p>AI is thinking...</p>
               </div>
             )}
-            {previewImage ? (
+
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className={`camera-feed ${isCameraOpen ? 'visible' : ''}`}
+            />
+
+            {previewVideo ? (
+              <video src={previewVideo} controls className="placeholder-img" autoPlay loop muted />
+            ) : previewImage ? (
               <img src={previewImage} alt="Generated Design" className="placeholder-img" />
-            ) : (
+            ) : !isCameraOpen && (
               <div className="empty-state">
                 <p>Your AI generation will appear here</p>
               </div>
+            )}
+
+            {(previewImage || previewVideo) && (
+              <button className="share-btn" onClick={handleShare}>
+                <span>🔗</span> Share
+              </button>
             )}
           </div>
         </div>

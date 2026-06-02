@@ -211,6 +211,29 @@ body {
   border-color: var(--primary-color);
 }
 
+.camera-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.camera-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.camera-toggle.active {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
 .showcase {
   padding: 4rem 2rem;
   max-width: 1200px;
@@ -289,6 +312,45 @@ body {
   height: 100%;
   object-fit: cover;
   opacity: 0.5;
+}
+
+.camera-feed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+  z-index: 5;
+}
+
+.camera-feed.visible {
+  display: block;
+}
+
+.share-btn {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.share-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 
 .pricing {

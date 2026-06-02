@@ -25,9 +25,14 @@ app.post('/api/generate', (req, res) => {
 
   // Simulate AI generation delay
   setTimeout(() => {
-    const keywords = `${mode},${prompt}`.replace(/\s+/g, ',');
-    const imageUrl = `https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`;
-    res.json({ imageUrl });
+    if (mode === 'video') {
+      // Return a sample video URL for demonstration
+      res.json({ videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4' });
+    } else {
+      const keywords = `${mode},${prompt}`.replace(/\s+/g, ',');
+      const imageUrl = `https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`;
+      res.json({ imageUrl });
+    }
   }, 1500);
 });
 
