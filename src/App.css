@@ -54,6 +54,28 @@ body {
   color: var(--primary-color);
 }
 
+.nav-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.sponsor-button {
+  background: transparent;
+  color: var(--primary-color);
+  padding: 0.6rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: 2px solid var(--primary-color);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.sponsor-button:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
 .hero {
   text-align: center;
   padding: 6rem 2rem;
@@ -135,11 +157,13 @@ body {
 }
 
 .ai-editor {
-  background: #1e293b;
-  border-radius: 1rem;
-  padding: 2rem;
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 2rem;
+  padding: 3rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  margin-top: 2rem;
+  margin-top: 3rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(20px);
 }
 
 .mode-selector {
@@ -243,15 +267,21 @@ body {
 }
 
 .preview-area {
-  height: 400px;
+  height: 500px;
   background: #0f172a;
-  border-radius: 0.5rem;
+  border-radius: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px dashed rgba(255, 255, 255, 0.1);
   position: relative;
   overflow: hidden;
+  transition: all 0.5s ease;
+}
+
+.preview-area:hover {
+  border-color: var(--primary-color);
+  background: #131c31;
 }
 
 .placeholder-img {
@@ -259,6 +289,181 @@ body {
   height: 100%;
   object-fit: cover;
   opacity: 0.5;
+}
+
+.pricing {
+  padding: 6rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.pricing h2 {
+  font-size: 2.5rem;
+  margin-bottom: 4rem;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.pricing-card {
+  background: var(--card-bg);
+  padding: 3rem 2rem;
+  border-radius: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  transition: transform 0.3s;
+}
+
+.pricing-card.popular {
+  border-color: var(--primary-color);
+  transform: scale(1.05);
+}
+
+.pricing-card:hover {
+  transform: translateY(-10px);
+}
+
+.pricing-card.popular:hover {
+  transform: translateY(-10px) scale(1.05);
+}
+
+.badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.price {
+  font-size: 3rem;
+  font-weight: 800;
+  margin: 1.5rem 0;
+}
+
+.price span {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.pricing-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+  text-align: left;
+}
+
+.pricing-card li {
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pricing-card li::before {
+  content: '✓';
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.pricing-btn {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.pricing-btn.primary {
+  background: var(--primary-color);
+  border: none;
+}
+
+.pricing-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.pricing-btn.primary:hover {
+  background: #4f46e5;
+}
+
+.sponsorship {
+  background: linear-gradient(to right, #1e293b, #0f172a);
+  padding: 6rem 2rem;
+  margin: 4rem 0;
+}
+
+.sponsorship-content {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.sponsorship-content h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.sponsorship-content p {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 3rem;
+}
+
+.sponsorship-stats {
+  display: flex;
+  justify-content: center;
+  gap: 4rem;
+  margin-bottom: 3rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+.stat-label {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+}
+
+.sponsor-cta {
+  background: linear-gradient(to right, #f472b6, #fb7185);
+  color: white;
+  padding: 1rem 3rem;
+  border-radius: 9999px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.sponsor-cta:hover {
+  transform: scale(1.05);
 }
 
 .loading-overlay {
