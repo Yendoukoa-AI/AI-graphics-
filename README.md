@@ -1,70 +1,67 @@
-# GitHub Codespaces ♥️ React
+# DesignAI Studio
 
-Welcome to your shiny new Codespace running React! We've got everything fired up and running for you to explore React.
+DesignAI Studio is an AI-powered design platform dedicated to the modern creator. It leverages artificial intelligence to revolutionize workflows in web design, graphic design, Photoshop enhancements, and poster creation.
 
-You've got a blank canvas to work on from a git perspective as well. There's a single initial commit with the what you're seeing right now - where you go from here is up to you!
+## 🚀 Features
 
-Everything you do here is contained within this one codespace. There is no repository on GitHub yet. If and when you’re ready you can click "Publish Branch" and we’ll create your repository and push up your project. If you were just exploring then and have no further need for this code then you can simply delete your codespace and it's gone forever.
+- **🌐 Web Design AI**: Generate responsive layouts, UI components, and complete landing pages from simple text descriptions.
+- **🎨 Graphic & Photoshop**: Advanced AI tools for image manipulation, background removal, and professional photo retouching.
+- **🖼️ Affiches & Posters**: Create stunning public posters and advertisements with automated typography and layout balancing.
+- **⚡ Real-time Generation**: Experience the power of AI with our integrated editor and see your ideas come to life instantly.
 
-This project was bootstrapped for you with [Vite](https://vitejs.dev/).
+## 🛠️ Tech Stack
 
-## Available Scripts
+- **Framework**: [React](https://reactjs.org/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Testing**: [Vitest](https://vitest.dev/)
+- **Styling**: CSS3
+
+## 🏁 Getting Started
+
+### Prerequisites
+
+- Node.js (v16 or higher)
+- npm
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd codespaces-react
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+### Available Scripts
 
 In the project directory, you can run:
 
-### `npm start`
+#### `npm start`
+Runs the app in development mode using Vite.
+Open [http://localhost:3000/](http://localhost:3000/) to view it in your browser.
 
-We've already run this for you in the `Codespaces: server` terminal window below. If you need to stop the server for any reason you can just run `npm start` again to bring it back online.
-
-Runs the app in the development mode.\
-Open [http://localhost:3000/](http://localhost:3000/) in the built-in Simple Browser (`Cmd/Ctrl + Shift + P > Simple Browser: Show`) to view your running application.
-
-The page will reload automatically when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
+#### `npm run build`
+Builds the app for production to the `dist` folder.
 It correctly bundles React in production mode and optimizes the build for the best performance.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+#### `npm test`
+Launches the test runner (Vitest).
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### `npm run preview`
+Locally preview the production build.
 
-## Learn More
+## 📁 Project Structure
 
-You can learn more in the [Vite documentation](https://vitejs.dev/guide/).
+- `src/App.jsx`: Main application component containing the AI editor and landing page sections.
+- `src/App.css`: Styles for the application, featuring a dark-themed UI.
+- `public/`: Static assets.
 
-To learn Vitest, a Vite-native testing framework, go to [Vitest documentation](https://vitest.dev/guide/)
+## 📝 License
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://sambitsahoo.com/blog/vite-code-splitting-that-works.html](https://sambitsahoo.com/blog/vite-code-splitting-that-works.html)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://github.com/btd/rollup-plugin-visualizer#rollup-plugin-visualizer](https://github.com/btd/rollup-plugin-visualizer#rollup-plugin-visualizer)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://dev.to/hamdankhan364/simplifying-progressive-web-app-pwa-development-with-vite-a-beginners-guide-38cf](https://dev.to/hamdankhan364/simplifying-progressive-web-app-pwa-development-with-vite-a-beginners-guide-38cf)
-
-### Advanced Configuration
-
-This section has moved here: [https://vitejs.dev/guide/build.html#advanced-base-options](https://vitejs.dev/guide/build.html#advanced-base-options)
-
-### Deployment
-
-This section has moved here: [https://vitejs.dev/guide/build.html](https://vitejs.dev/guide/build.html)
-
-### Troubleshooting
-
-This section has moved here: [https://vitejs.dev/guide/troubleshooting.html](https://vitejs.dev/guide/troubleshooting.html)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
