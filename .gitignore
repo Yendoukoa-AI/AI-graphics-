@@ -115,6 +115,10 @@ dist
 
 # production
 /build
+/dist
+
+# SSL certificates
+/certs
 
 # misc
 .DS_Store

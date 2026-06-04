@@ -1,12 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const https = require('https');
+const http = require('http');
 const axios = require('axios');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const SSL_KEY_PATH = process.env.SSL_KEY_PATH || path.join(__dirname, '../certs/key.pem');
+const SSL_CERT_PATH = process.env.SSL_CERT_PATH || path.join(__dirname, '../certs/cert.pem');
 
 app.use(cors());
 app.use(express.json());
@@ -110,6 +115,20 @@ app.get('*', (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+let server;
+
+if (fs.existsSync(SSL_KEY_PATH) && fs.existsSync(SSL_CERT_PATH)) {
+  const options = {
+    key: fs.readFileSync(SSL_KEY_PATH),
+    cert: fs.readFileSync(SSL_CERT_PATH)
+  };
+  server = https.createServer(options, app);
+  console.log('HTTPS enabled');
+} else {
+  server = http.createServer(app);
+  console.log('HTTPS disabled, falling back to HTTP');
+}
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
