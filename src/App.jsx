@@ -8,6 +8,23 @@ function App() {
   const [previewVideo, setPreviewVideo] = useState(null);
   const [aiInsight, setAiInsight] = useState('');
   const [mode, setMode] = useState('web');
+  const [shoplineProducts, setShoplineProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isFetchingProducts, setIsFetchingProducts] = useState(false);
+
+  const fetchShoplineProducts = async () => {
+    setIsFetchingProducts(true);
+    const API_URL = import.meta.env.VITE_API_URL || '';
+    try {
+      const response = await fetch(`${API_URL}/api/shopline/products`);
+      const data = await response.json();
+      setShoplineProducts(data.products || []);
+    } catch (error) {
+      console.error('Error fetching Shopline products:', error);
+    } finally {
+      setIsFetchingProducts(false);
+    }
+  };
 
   const handleShare = async () => {
     const shareData = {
@@ -40,7 +57,11 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt, mode }),
+        body: JSON.stringify({
+          prompt,
+          mode,
+          product: mode === 'shopline' ? selectedProduct : null
+        }),
       });
       const data = await response.json();
       if (data.imageUrl) {
@@ -226,7 +247,44 @@ function App() {
             >
               AI Video
             </button>
+            <button
+              className={`mode-btn ${mode === 'shopline' ? 'active' : ''}`}
+              onClick={() => {
+                setMode('shopline');
+                if (shoplineProducts.length === 0) {
+                  fetchShoplineProducts();
+                }
+              }}
+            >
+              Shopline
+            </button>
           </div>
+
+          {mode === 'shopline' && (
+            <div className="shopline-selector">
+              <h4>Select a Product to Design For</h4>
+              {isFetchingProducts ? (
+                <p>Loading products...</p>
+              ) : (
+                <div className="product-list">
+                  {shoplineProducts.map(product => (
+                    <div
+                      key={product.id}
+                      className={`product-item ${selectedProduct?.id === product.id ? 'selected' : ''}`}
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setPrompt(`Design a promotional banner for ${product.title}`);
+                      }}
+                    >
+                      <img src={product.image || (product.images && product.images[0]?.src)} alt={product.title} />
+                      <span>{product.title}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="editor-controls">
             <input
               type="text"
