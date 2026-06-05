@@ -56,6 +56,29 @@ Launches the test runner (Vitest).
 #### `npm run preview`
 Locally preview the production build.
 
+#### `npm run package`
+Builds the project and creates a versioned release tarball (`release-vX.X.X.tar.gz`) along with a SHA-256 checksum for integrity verification.
+
+## 📦 Artifacts & Security
+
+We provide automated packaging and integrity verification tools to ensure the security of your deployments.
+
+### Generating a Release Artifact
+To create a downloadable distribution package:
+```bash
+npm run package
+```
+This will generate:
+- `release-v1.0.0.tar.gz`: The production-ready bundle.
+- `release-v1.0.0.tar.gz.sha256`: A checksum file to verify the artifact.
+
+### Verifying Integrity
+To protect against unauthorized modifications, always verify the integrity of the downloaded artifact:
+```bash
+python3 scripts/verify_integrity.py release-v1.0.0.tar.gz
+```
+The tool will check the artifact against its SHA-256 hash and report any discrepancies.
+
 ## 📁 Project Structure
 
 - `src/App.jsx`: Main application component containing the AI editor and landing page sections.

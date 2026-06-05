@@ -2,6 +2,14 @@ import os
 import json
 import tarfile
 import subprocess
+import hashlib
+
+def generate_sha256(filename):
+    sha256_hash = hashlib.sha256()
+    with open(filename, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
 
 def main():
     # Load package.json for version
@@ -35,6 +43,14 @@ def main():
                 print(f"Skipping {item} (not found)")
 
     print(f"Successfully created {filename}")
+
+    # Generate SHA-256 checksum
+    checksum = generate_sha256(filename)
+    checksum_filename = f"{filename}.sha256"
+    with open(checksum_filename, "w") as f:
+        f.write(f"{checksum}  {filename}\n")
+
+    print(f"Checksum generated in {checksum_filename}: {checksum}")
 
 if __name__ == "__main__":
     main()
