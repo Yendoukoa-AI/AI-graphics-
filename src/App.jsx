@@ -167,7 +167,7 @@ function App() {
         <p>Revolutionize your workflow with AI dedicated to web design, graphics, Photoshop enhancements, and public posters.</p>
         <div className="hero-actions">
           <button className="cta-button">Try for Free</button>
-          <button className="secondary-button">Watch Demo</button>
+          <a href="#editor" className="secondary-button" style={{ textDecoration: 'none', display: 'inline-block' }}>Watch Demo</a>
         </div>
       </header>
 

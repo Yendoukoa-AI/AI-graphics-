@@ -13,7 +13,12 @@
 
 * {
   box-sizing: border-box;
-  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  * {
+    scroll-behavior: smooth;
+  }
 }
 
 body {
@@ -35,6 +40,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 2rem;
+  background: #0f172a; /* Solid fallback */
   background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(10px);
   position: sticky;
@@ -198,7 +204,12 @@ body {
   font-size: 0.9rem;
   font-weight: 600;
   margin-bottom: 2rem;
-  animation: fadeInDown 0.8s ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-badge {
+    animation: fadeInDown 0.8s ease-out;
+  }
 }
 
 .hero-actions {
@@ -217,6 +228,8 @@ body {
   border: 1px solid var(--glass-border);
   cursor: pointer;
   transition: all 0.3s;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .secondary-button:hover {
@@ -332,6 +345,7 @@ body {
 }
 
 .testimonial-card {
+  background: #1e293b; /* Solid fallback */
   background: var(--card-bg);
   padding: 2.5rem;
   border-radius: 1.5rem;
@@ -388,22 +402,34 @@ body {
 }
 
 .card {
+  background: #1e293b; /* Solid fallback */
   background: var(--card-bg);
   padding: 2.5rem;
   border-radius: 1.5rem;
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(12px);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.3s, box-shadow 0.3s;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
 .card:hover {
-  transform: translateY(-8px);
   border-color: var(--primary-color);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card:hover {
+    transform: translateY(-8px);
+  }
 }
 
 .card h3 {
@@ -430,6 +456,7 @@ body {
 }
 
 .ai-editor {
+  background: #1e293b; /* Solid fallback */
   background: rgba(30, 41, 59, 0.5);
   border-radius: 2rem;
   padding: 3rem;
@@ -587,12 +614,19 @@ body {
 }
 
 .pricing-card {
+  background: #1e293b; /* Solid fallback */
   background: var(--card-bg);
   padding: 3rem 2rem;
   border-radius: 2rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
   position: relative;
-  transition: transform 0.3s;
+  transition: box-shadow 0.3s;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pricing-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
 }
 
 .pricing-card.popular {
@@ -600,12 +634,14 @@ body {
   transform: scale(1.05);
 }
 
-.pricing-card:hover {
-  transform: translateY(-10px);
-}
+@media (prefers-reduced-motion: no-preference) {
+  .pricing-card:hover {
+    transform: translateY(-10px);
+  }
 
-.pricing-card.popular:hover {
-  transform: translateY(-10px) scale(1.05);
+  .pricing-card.popular:hover {
+    transform: translateY(-10px) scale(1.05);
+  }
 }
 
 .badge {
@@ -883,13 +919,19 @@ footer {
   bottom: 2rem;
   left: 2rem;
   right: 2rem;
+  background: #0f172a; /* Solid fallback */
   background: rgba(15, 23, 42, 0.9);
   padding: 1.5rem;
   border-radius: 1rem;
   border: 1px solid var(--primary-color);
   text-align: left;
   backdrop-filter: blur(10px);
-  animation: slideUp 0.5s ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ai-insight-box {
+    animation: slideUp 0.5s ease-out;
+  }
 }
 
 .insight-header {
