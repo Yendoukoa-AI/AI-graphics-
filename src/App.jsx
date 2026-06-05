@@ -127,10 +127,44 @@ function App() {
       </nav>
 
       <header className="hero">
+        <div className="hero-badge">Now with AI Video Generation 🎬</div>
         <h1>AI-Powered Design <br />for the Modern Creator</h1>
         <p>Revolutionize your workflow with AI dedicated to web design, graphics, Photoshop enhancements, and public posters.</p>
-        <button className="cta-button">Try for Free</button>
+        <div className="hero-actions">
+          <button className="cta-button">Try for Free</button>
+          <button className="secondary-button">Watch Demo</button>
+        </div>
       </header>
+
+      <section className="how-it-works">
+        <h2>How it Works</h2>
+        <div className="steps-grid">
+          <div className="step">
+            <div className="step-number">1</div>
+            <h4>Choose Mode</h4>
+            <p>Select between Web, Photo, Poster or Video generation modes.</p>
+          </div>
+          <div className="step">
+            <div className="step-number">2</div>
+            <h4>Describe</h4>
+            <p>Enter a simple text prompt describing your vision.</p>
+          </div>
+          <div className="step">
+            <div className="step-number">3</div>
+            <h4>Refine</h4>
+            <p>Use AI insights to perfect your creation instantly.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="trust-section">
+        <div className="trust-logos">
+          <span className="logo-item">SHOPLINE</span>
+          <span className="logo-item">ADOBE</span>
+          <span className="logo-item">FIGMA</span>
+          <span className="logo-item">CANVA</span>
+        </div>
+      </section>
 
       <section id="features" className="features">
         <div className="card">
@@ -212,6 +246,32 @@ function App() {
         </div>
       </section>
 
+      <section className="testimonials">
+        <h2>Trusted by Creators</h2>
+        <div className="testimonials-grid">
+          <div className="testimonial-card">
+            <p>"DesignAI has completely changed how I approach web projects. It's like having a senior designer on speed dial."</p>
+            <div className="author">
+              <div className="author-avatar">SC</div>
+              <div className="author-info">
+                <strong>Sarah Chen</strong>
+                <span>Freelance Web Designer</span>
+              </div>
+            </div>
+          </div>
+          <div className="testimonial-card">
+            <p>"The Photoshop AI tools are mind-blowing. Background removal that used to take minutes now takes seconds."</p>
+            <div className="author">
+              <div className="author-avatar">MJ</div>
+              <div className="author-info">
+                <strong>Marcus Johnson</strong>
+                <span>Art Director</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="showcase" className="showcase">
         <h2>Created with DesignAI</h2>
         <div className="showcase-grid">
@@ -241,8 +301,10 @@ function App() {
       </section>
 
       <section id="editor" className="demo-section">
-        <h2>Experience the Power</h2>
-        <p>Describe what you want to create and let our AI do the heavy lifting.</p>
+        <div className="section-header">
+          <h2>Experience the Power</h2>
+          <p>Describe what you want to create and let our AI do the heavy lifting.</p>
+        </div>
 
         <div className="ai-editor">
           <div className="mode-selector">
