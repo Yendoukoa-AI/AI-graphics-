@@ -11,6 +11,20 @@ currently being supported with security updates.
 | 5.0.x   | :x:                |
 | 4.0.x   | :white_check_mark: |
 | < 4.0   | :x:                |
+| 1.0.x   | :white_check_mark: |
+
+## Integrity and Authenticity
+
+To ensure the security of the DesignAI Studio platform, we implement strict integrity checks for all release artifacts.
+
+### SHA-256 Checksums
+Every release package is accompanied by a `.sha256` checksum file. This allows users to verify that the file has not been tampered with or corrupted during transit.
+
+### Verification Process
+Before deploying or using a release artifact, users are encouraged to run the provided verification script:
+```bash
+python3 scripts/verify_integrity.py <artifact_name>
+```
 
 ## Reporting a Vulnerability
 
