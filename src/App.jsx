@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
@@ -12,12 +12,35 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [langflowResponse, setLangflowResponse] = useState('');
+  const [user, setUser] = useState(null);
+
+  const API_URL = import.meta.env.VITE_API_URL || '';
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      const response = await fetch(`${API_URL}/auth/user`, {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data && data.id) {
+        setUser(data);
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
 
   const fetchShoplineProducts = async () => {
     setIsFetchingProducts(true);
     const API_URL = import.meta.env.VITE_API_URL || '';
     try {
-      const response = await fetch(`${API_URL}/api/shopline/products`);
+      const response = await fetch(`${API_URL}/api/shopline/products`, {
+        credentials: 'include'
+      });
       const data = await response.json();
       setShoplineProducts(data.products || []);
     } catch (error) {
@@ -61,6 +84,7 @@ function App() {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include',
           body: JSON.stringify({ prompt }),
         });
         const data = await response.json();
@@ -80,6 +104,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           prompt,
           mode,
@@ -122,7 +147,17 @@ function App() {
         </div>
         <div className="nav-actions">
           <button className="sponsor-button">Sponsor</button>
-          <button className="cta-button">Get Started</button>
+          {user ? (
+            <div className="user-profile">
+              <img src={user.photos[0].value} alt={user.displayName} className="user-avatar" />
+              <div className="user-dropdown">
+                <span>{user.displayName}</span>
+                <a href={`${API_URL}/auth/logout`} className="logout-link">Logout</a>
+              </div>
+            </div>
+          ) : (
+            <a href={`${API_URL}/auth/google`} className="cta-button login-btn">Login with Google</a>
+          )}
         </div>
       </nav>
 

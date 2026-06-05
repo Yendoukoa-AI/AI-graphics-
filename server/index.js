@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const axios = require('axios');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const session = require('express-session');
 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
 const { HumanMessage } = require('@langchain/core/messages');
 require('dotenv').config();
@@ -9,8 +12,56 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
+
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'designai-studio-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport Google Strategy
+const isGoogleConfigured = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+
+if (isGoogleConfigured) {
+  passport.use(new GoogleStrategy({
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "/auth/google/callback",
+      proxy: true
+    },
+    (accessToken, refreshToken, profile, done) => {
+      // In a real app, you would find or create a user in your database here
+      return done(null, profile);
+    }
+  ));
+}
+
+passport.serializeUser((user, done) => {
+  // Store only the essential info in the session
+  done(null, {
+    id: user.id,
+    displayName: user.displayName,
+    photos: user.photos,
+    emails: user.emails
+  });
+});
+
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../dist')));
@@ -104,6 +155,35 @@ app.post('/api/generate', async (req, res) => {
       error: 'Google AI API error, using fallback'
     });
   }
+});
+
+// Auth Routes
+app.get('/auth/google', (req, res, next) => {
+  if (!isGoogleConfigured) {
+    return res.status(501).json({ error: 'Google OAuth not configured' });
+  }
+  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+});
+
+app.get('/auth/google/callback', (req, res, next) => {
+  if (!isGoogleConfigured) {
+    return res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
+  }
+  passport.authenticate('google', { failureRedirect: '/' })(req, res, next);
+}, (req, res) => {
+  // Successful authentication, redirect home.
+  res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
+});
+
+app.get('/auth/user', (req, res) => {
+  res.json(req.user || null);
+});
+
+app.get('/auth/logout', (req, res, next) => {
+  req.logout((err) => {
+    if (err) { return next(err); }
+    res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
+  });
 });
 
 app.post('/api/langflow', async (req, res) => {
