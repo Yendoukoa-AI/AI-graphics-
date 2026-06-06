@@ -2,6 +2,13 @@
 
 DesignAI Studio is an AI-powered design platform dedicated to the modern creator. It leverages artificial intelligence to revolutionize workflows in web design, graphic design, Photoshop enhancements, and poster creation.
 
+## 📢 Latest News: Version 1.0.0 Released!
+
+We are excited to announce our first official release! **DesignAI Studio v1.0.0** is now available.
+
+- **Release Tag**: [v1.0.0](https://github.com/GYFX35/AI-graphics-/releases/tag/v1.0.0)
+- **Artifact**: [Download release-v1.0.0.tar.gz](https://github.com/GYFX35/AI-graphics-/releases/download/v1.0.0/release-v1.0.0.tar.gz)
+
 ## 🚀 Features
 
 - **🌐 Web Design AI**: Generate responsive layouts, UI components, and complete landing pages from simple text descriptions.
@@ -62,6 +69,10 @@ Builds the project and creates a versioned release tarball (`release-vX.X.X.tar.
 ## 📦 Artifacts & Security
 
 We provide automated packaging and integrity verification tools to ensure the security of your deployments.
+
+### 📥 Download Latest Release
+You can download the latest production-ready artifact directly from our releases page:
+- **[Download v1.0.0 Artifact](https://github.com/GYFX35/AI-graphics-/releases/download/v1.0.0/release-v1.0.0.tar.gz)**
 
 ### Generating a Release Artifact
 To create a downloadable distribution package:
