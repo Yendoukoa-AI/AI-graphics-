@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - FRONTEND_URL=http://localhost:3001
+      - SESSION_SECRET=${SESSION_SECRET:-designai-studio-secret}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+      - SHOPLINE_ACCESS_TOKEN=${SHOPLINE_ACCESS_TOKEN}
+      - SHOPLINE_STORE_DOMAIN=${SHOPLINE_STORE_DOMAIN}
+      - LANGFLOW_ID=${LANGFLOW_ID}
+      - FLOW_ID=${FLOW_ID}
+      - LANGFLOW_TOKEN=${LANGFLOW_TOKEN}
+    restart: always

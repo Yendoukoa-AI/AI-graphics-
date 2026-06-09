@@ -20,6 +20,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:lambdatest": "LT_USERNAME=${LT_USERNAME} LT_ACCESS_KEY=${LT_ACCESS_KEY} playwright test --config=playwright.config.js --project=lambdatest-chrome",
     "package": "python3 scripts/package.py"
   },
   "eslintConfig": {
@@ -41,8 +43,10 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@vitejs/plugin-react": "^4.1.1",
     "jsdom": "^22.1.0",
+    "playwright-core": "^1.60.0",
     "vite": "^4.5.3",
     "vitest": "^0.34.6"
   }
