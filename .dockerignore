@@ -1,0 +1,8 @@
+node_modules
+dist
+release-v*.tar.gz*
+*.log
+.git
+.vscode
+.devcontainer
+certs
