@@ -13,3 +13,15 @@ test('renders Try for Free button', () => {
   const buttonElement = screen.getByText(/Try for Free/i);
   expect(buttonElement).toBeDefined();
 });
+
+test('renders Ad Creative AI feature card', () => {
+  render(<App />);
+  const featureElement = screen.getByText(/Ad Creative AI/i);
+  expect(featureElement).toBeDefined();
+});
+
+test('renders Ad Creative mode button', () => {
+  render(<App />);
+  const modeButton = screen.getByText(/^Ad Creative$/i);
+  expect(modeButton).toBeDefined();
+});

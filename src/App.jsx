@@ -177,7 +177,7 @@ function App() {
           <div className="step">
             <div className="step-number">1</div>
             <h4>Choose Mode</h4>
-            <p>Select between Cinematography, Music, Web, or E-commerce modes.</p>
+            <p>Select between Cinematography, Music, Ad Creative, Web, or E-commerce modes.</p>
           </div>
           <div className="step">
             <div className="step-number">2</div>
@@ -222,6 +222,11 @@ function App() {
           <span className="card-icon">📦</span>
           <h3>Dropshipping & E-comm</h3>
           <p>Integrated tools for product sourcing, e-commerce partnership management, and automated sales funnels.</p>
+        </div>
+        <div className="card">
+          <span className="card-icon">📢</span>
+          <h3>Ad Creative AI</h3>
+          <p>Generate high-converting ad visuals and copy for social media, search, and display campaigns.</p>
         </div>
       </section>
 
@@ -385,6 +390,12 @@ function App() {
               Entertainment
             </button>
             <button
+              className={`mode-btn ${mode === 'ad-creative' ? 'active' : ''}`}
+              onClick={() => setMode('ad-creative')}
+            >
+              Ad Creative
+            </button>
+            <button
               className={`mode-btn ${mode === 'web' ? 'active' : ''}`}
               onClick={() => setMode('web')}
             >
@@ -442,6 +453,7 @@ function App() {
                 mode === 'cinema' ? "e.g., Cinematic shot of a rainy street" :
                 mode === 'music' ? "e.g., Lo-fi hip hop beat for studying" :
                 mode === 'entertainment' ? "e.g., Global movie premiere poster" :
+                mode === 'ad-creative' ? "e.g., High-converting Facebook ad for sneakers" :
                 mode === 'web' ? "e.g., Landing page for tech startup" :
                 mode === 'langflow' ? "e.g., Ask anything to LangFlow..." :
                 "e.g., Dynamic product showcase video"
