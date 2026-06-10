@@ -162,9 +162,9 @@ function App() {
       </nav>
 
       <header className="hero">
-        <div className="hero-badge">Now with AI Video Generation 🎬</div>
-        <h1>AI-Powered Design <br />for the Modern Creator</h1>
-        <p>Revolutionize your workflow with AI dedicated to web design, graphics, Photoshop enhancements, and public posters.</p>
+        <div className="hero-badge">Now with Cinematography & Music AI 🎬 🎵</div>
+        <h1>AI-Powered Entertainment <br />for the Global Creator</h1>
+        <p>Revolutionize your workflow with AI dedicated to cinematography, music production, global entertainment, and e-commerce.</p>
         <div className="hero-actions">
           <button className="cta-button">Try for Free</button>
           <a href="#editor" className="secondary-button" style={{ textDecoration: 'none', display: 'inline-block' }}>Watch Demo</a>
@@ -177,7 +177,7 @@ function App() {
           <div className="step">
             <div className="step-number">1</div>
             <h4>Choose Mode</h4>
-            <p>Select between Web, Photo, Poster or Video generation modes.</p>
+            <p>Select between Cinematography, Music, Web, or E-commerce modes.</p>
           </div>
           <div className="step">
             <div className="step-number">2</div>
@@ -195,32 +195,33 @@ function App() {
       <section className="trust-section">
         <div className="trust-logos">
           <span className="logo-item">SHOPLINE</span>
-          <span className="logo-item">ADOBE</span>
-          <span className="logo-item">FIGMA</span>
-          <span className="logo-item">CANVA</span>
+          <span className="logo-item">NETFLIX</span>
+          <span className="logo-item">SPOTIFY</span>
+          <span className="logo-item">SHOPIFY</span>
+          <span className="logo-item">UNIVERSAL</span>
         </div>
       </section>
 
       <section id="features" className="features">
         <div className="card">
-          <span className="card-icon">🌐</span>
-          <h3>Web Design AI</h3>
-          <p>Generate responsive layouts, UI components, and complete landing pages from simple text descriptions.</p>
+          <span className="card-icon">🎥</span>
+          <h3>Cinematography AI</h3>
+          <p>Generate storyboards, shot compositions, and cinematic lighting schemes for your next global production.</p>
         </div>
         <div className="card">
-          <span className="card-icon">🎨</span>
-          <h3>Graphic & Photoshop</h3>
-          <p>Advanced AI tools for image manipulation, background removal, and professional photo retouching.</p>
+          <span className="card-icon">🎵</span>
+          <h3>Music & Audio AI</h3>
+          <p>Compose original scores, generate soundscapes, and master audio tracks for any entertainment project.</p>
         </div>
         <div className="card">
-          <span className="card-icon">🖼️</span>
-          <h3>Affiches & Posters</h3>
-          <p>Create stunning public posters and advertisements with automated typography and layout balancing.</p>
+          <span className="card-icon">🌎</span>
+          <h3>Global Entertainment</h3>
+          <p>End-to-end AI tools for film, music, and digital media production tailored for a global audience.</p>
         </div>
         <div className="card">
-          <span className="card-icon">🎬</span>
-          <h3>AI Video Generation</h3>
-          <p>Bring your designs to life with AI-powered video generation. Create dynamic content for social media and marketing.</p>
+          <span className="card-icon">📦</span>
+          <h3>Dropshipping & E-comm</h3>
+          <p>Integrated tools for product sourcing, e-commerce partnership management, and automated sales funnels.</p>
         </div>
       </section>
 
@@ -260,6 +261,28 @@ function App() {
             </ul>
             <button className="pricing-btn">Contact Sales</button>
           </div>
+        </div>
+      </section>
+
+      <section id="ecommerce" className="ecommerce-partnership">
+        <div className="partnership-content">
+          <h2>E-commerce & Dropshipping Partnership</h2>
+          <p>We've partnered with leading global platforms to provide seamless product sourcing and automated dropshipping workflows directly within your creative projects.</p>
+          <div className="partnership-grid">
+            <div className="partner-card">
+              <h4>Global Sourcing</h4>
+              <p>Access millions of products from verified suppliers worldwide.</p>
+            </div>
+            <div className="partner-card">
+              <h4>Auto-Fulfillment</h4>
+              <p>Orders are automatically synced and shipped to your customers.</p>
+            </div>
+            <div className="partner-card">
+              <h4>AI-Driven Sales</h4>
+              <p>Our AI optimizes your product descriptions and visuals for maximum conversion.</p>
+            </div>
+          </div>
+          <button className="cta-button">Join Partnership Program</button>
         </div>
       </section>
 
@@ -344,28 +367,28 @@ function App() {
         <div className="ai-editor">
           <div className="mode-selector">
             <button
+              className={`mode-btn ${mode === 'cinema' ? 'active' : ''}`}
+              onClick={() => setMode('cinema')}
+            >
+              Cinematography
+            </button>
+            <button
+              className={`mode-btn ${mode === 'music' ? 'active' : ''}`}
+              onClick={() => setMode('music')}
+            >
+              Music
+            </button>
+            <button
+              className={`mode-btn ${mode === 'entertainment' ? 'active' : ''}`}
+              onClick={() => setMode('entertainment')}
+            >
+              Entertainment
+            </button>
+            <button
               className={`mode-btn ${mode === 'web' ? 'active' : ''}`}
               onClick={() => setMode('web')}
             >
               Web Design
-            </button>
-            <button
-              className={`mode-btn ${mode === 'photo' ? 'active' : ''}`}
-              onClick={() => setMode('photo')}
-            >
-              Photoshop
-            </button>
-            <button
-              className={`mode-btn ${mode === 'poster' ? 'active' : ''}`}
-              onClick={() => setMode('poster')}
-            >
-              Poster
-            </button>
-            <button
-              className={`mode-btn ${mode === 'video' ? 'active' : ''}`}
-              onClick={() => setMode('video')}
-            >
-              AI Video
             </button>
             <button
               className={`mode-btn ${mode === 'shopline' ? 'active' : ''}`}
@@ -376,7 +399,7 @@ function App() {
                 }
               }}
             >
-              Shopline
+              Dropshipping
             </button>
             <button
               className={`mode-btn ${mode === 'langflow' ? 'active' : ''}`}
@@ -416,9 +439,10 @@ function App() {
               type="text"
               className="input-field"
               placeholder={
+                mode === 'cinema' ? "e.g., Cinematic shot of a rainy street" :
+                mode === 'music' ? "e.g., Lo-fi hip hop beat for studying" :
+                mode === 'entertainment' ? "e.g., Global movie premiere poster" :
                 mode === 'web' ? "e.g., Landing page for tech startup" :
-                mode === 'photo' ? "e.g., Cyberpunk portrait effect" :
-                mode === 'poster' ? "e.g., Event poster for jazz concert" :
                 mode === 'langflow' ? "e.g., Ask anything to LangFlow..." :
                 "e.g., Dynamic product showcase video"
               }

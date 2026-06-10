@@ -79,7 +79,10 @@ app.get('/api/shopline/products', async (req, res) => {
     return res.json({
       products: [
         { id: '1', title: 'Avenue T-Shirt', handle: 'avenue-t-shirt', image: 'https://loremflickr.com/200/200/tshirt' },
-        { id: '2', title: 'Summer Sneakers', handle: 'summer-sneakers', image: 'https://loremflickr.com/200/200/sneakers' }
+        { id: '2', title: 'Summer Sneakers', handle: 'summer-sneakers', image: 'https://loremflickr.com/200/200/sneakers' },
+        { id: '3', title: 'Pro Headphones', handle: 'pro-headphones', image: 'https://loremflickr.com/200/200/headphones' },
+        { id: '4', title: 'Cinematic Camera', handle: 'cinematic-camera', image: 'https://loremflickr.com/200/200/camera' },
+        { id: '5', title: 'Studio Microphone', handle: 'studio-microphone', image: 'https://loremflickr.com/200/200/microphone' }
       ],
       isMock: true
     });
@@ -113,7 +116,7 @@ app.post('/api/generate', async (req, res) => {
 
   const keywords = product ? `${product.title},${prompt}` : `${mode},${prompt}`;
   let imageUrl = `https://loremflickr.com/800/600/${encodeURIComponent(keywords.replace(/\s+/g, ','))}`;
-  let videoUrl = mode === 'video' ? 'https://www.w3schools.com/html/mov_bbb.mp4' : null;
+  let videoUrl = (mode === 'video' || mode === 'cinema') ? 'https://www.w3schools.com/html/mov_bbb.mp4' : null;
 
   if (videoUrl) {
     imageUrl = null;
@@ -127,7 +130,13 @@ app.post('/api/generate', async (req, res) => {
       let aiPrompt = `As a design expert, provide a short, inspiring design insight (2 sentences) for the following ${mode} request: "${prompt}"`;
 
       if (mode === 'shopline' && product) {
-        aiPrompt = `As a design expert, provide a short, inspiring design insight (2 sentences) for a Shopline product promotion. Product: "${product.title}". Request: "${prompt}"`;
+        aiPrompt = `As an e-commerce and dropshipping expert, provide a short, inspiring insight (2 sentences) for a product promotion. Product: "${product.title}". Request: "${prompt}"`;
+      } else if (mode === 'cinema') {
+        aiPrompt = `As a cinematography expert, provide a short, professional insight (2 sentences) for this shot/scene request: "${prompt}"`;
+      } else if (mode === 'music') {
+        aiPrompt = `As a music producer, provide a short, inspiring insight (2 sentences) for this audio/music request: "${prompt}"`;
+      } else if (mode === 'entertainment') {
+        aiPrompt = `As a global entertainment industry expert, provide a short, strategic insight (2 sentences) for this project: "${prompt}"`;
       }
 
       const response = await chatModel.invoke([

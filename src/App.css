@@ -720,6 +720,60 @@ body {
   margin: 4rem 0;
 }
 
+.ecommerce-partnership {
+  padding: 6rem 2rem;
+  background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+  text-align: center;
+}
+
+.partnership-content {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.partnership-content h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.partnership-content p {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  max-width: 700px;
+  margin: 0 auto 3rem;
+}
+
+.partnership-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.partner-card {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 1.5rem;
+  border: 1px solid var(--glass-border);
+  transition: transform 0.3s;
+}
+
+.partner-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary-color);
+}
+
+.partner-card h4 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.partner-card p {
+  font-size: 0.95rem;
+  margin-bottom: 0;
+}
+
 .sponsorship-content {
   max-width: 800px;
   margin: 0 auto;
