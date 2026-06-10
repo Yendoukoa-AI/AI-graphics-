@@ -139,6 +139,12 @@ app.post('/api/generate', async (req, res) => {
         aiPrompt = `As a global entertainment industry expert, provide a short, strategic insight (2 sentences) for this project: "${prompt}"`;
       } else if (mode === 'ad-creative') {
         aiPrompt = `As an expert ad creative director, provide a short, high-conversion insight (2 sentences) for this advertisement request: "${prompt}"`;
+      } else if (mode === 'web') {
+        aiPrompt = `As a professional web designer, provide a short, strategic insight (2 sentences) for this layout request: "${prompt}"`;
+      } else if (mode === 'graphics') {
+        aiPrompt = `As a graphic design expert, provide a short, professional insight (2 sentences) for this graphic request: "${prompt}"`;
+      } else if (mode === 'posters') {
+        aiPrompt = `As a professional poster designer, provide a short, artistic insight (2 sentences) for this poster request: "${prompt}"`;
       }
 
       const response = await chatModel.invoke([

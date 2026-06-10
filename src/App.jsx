@@ -162,9 +162,9 @@ function App() {
       </nav>
 
       <header className="hero">
-        <div className="hero-badge">Now with Cinematography & Music AI 🎬 🎵</div>
-        <h1>AI-Powered Entertainment <br />for the Global Creator</h1>
-        <p>Revolutionize your workflow with AI dedicated to cinematography, music production, global entertainment, and e-commerce.</p>
+        <div className="hero-badge">The Ultimate AI Creative Suite 🌐 🎨 🖼️</div>
+        <h1>Professional AI Design <br />for Modern Creators</h1>
+        <p>Generate responsive web layouts, professional graphics, and stunning posters instantly. Now featuring enhanced Cinematography and Music AI capabilities.</p>
         <div className="hero-actions">
           <button className="cta-button">Try for Free</button>
           <a href="#editor" className="secondary-button" style={{ textDecoration: 'none', display: 'inline-block' }}>Watch Demo</a>
@@ -177,7 +177,7 @@ function App() {
           <div className="step">
             <div className="step-number">1</div>
             <h4>Choose Mode</h4>
-            <p>Select between Cinematography, Music, Ad Creative, Web, or E-commerce modes.</p>
+            <p>Select between Web Design, Graphics, Posters, or advanced AI Enhancement modes.</p>
           </div>
           <div className="step">
             <div className="step-number">2</div>
@@ -204,29 +204,53 @@ function App() {
 
       <section id="features" className="features">
         <div className="card">
-          <span className="card-icon">🎥</span>
-          <h3>Cinematography AI</h3>
-          <p>Generate storyboards, shot compositions, and cinematic lighting schemes for your next global production.</p>
+          <span className="card-icon">🌐</span>
+          <h3>Web Design AI</h3>
+          <p>Generate responsive layouts, UI components, and complete landing pages from simple text descriptions.</p>
         </div>
         <div className="card">
-          <span className="card-icon">🎵</span>
-          <h3>Music & Audio AI</h3>
-          <p>Compose original scores, generate soundscapes, and master audio tracks for any entertainment project.</p>
+          <span className="card-icon">🎨</span>
+          <h3>Graphic & Photoshop</h3>
+          <p>Advanced AI tools for image manipulation, background removal, and professional photo retouching.</p>
         </div>
         <div className="card">
-          <span className="card-icon">🌎</span>
-          <h3>Global Entertainment</h3>
-          <p>End-to-end AI tools for film, music, and digital media production tailored for a global audience.</p>
+          <span className="card-icon">🖼️</span>
+          <h3>Affiches & Posters</h3>
+          <p>Create stunning public posters and advertisements with automated typography and layout balancing.</p>
         </div>
         <div className="card">
-          <span className="card-icon">📦</span>
-          <h3>Dropshipping & E-comm</h3>
-          <p>Integrated tools for product sourcing, e-commerce partnership management, and automated sales funnels.</p>
+          <span className="card-icon">⚡</span>
+          <h3>Real-time Generation</h3>
+          <p>Experience the power of AI with our integrated editor and see your ideas come to life instantly.</p>
         </div>
-        <div className="card">
-          <span className="card-icon">📢</span>
-          <h3>Ad Creative AI</h3>
-          <p>Generate high-converting ad visuals and copy for social media, search, and display campaigns.</p>
+      </section>
+
+      <section className="enhancements-section">
+        <div className="section-header">
+          <h2>AI Enhancements</h2>
+          <p>Specialized tools to expand your creative horizons</p>
+        </div>
+        <div className="features enhancements-grid">
+          <div className="card enhancement-card">
+            <span className="card-icon">🎥</span>
+            <h3>Cinematography AI</h3>
+            <p>Generate storyboards, shot compositions, and cinematic lighting schemes for global productions.</p>
+          </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">🎵</span>
+            <h3>Music & Audio AI</h3>
+            <p>Compose original scores, generate soundscapes, and master audio tracks for any project.</p>
+          </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">🌎</span>
+            <h3>Global Entertainment</h3>
+            <p>End-to-end AI tools for film, music, and digital media production tailored for a global audience.</p>
+          </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">📢</span>
+            <h3>Ad Creative AI</h3>
+            <p>Generate high-converting ad visuals and copy for social media, search, and display campaigns.</p>
+          </div>
         </div>
       </section>
 
@@ -370,54 +394,71 @@ function App() {
         </div>
 
         <div className="ai-editor">
-          <div className="mode-selector">
-            <button
-              className={`mode-btn ${mode === 'cinema' ? 'active' : ''}`}
-              onClick={() => setMode('cinema')}
-            >
-              Cinematography
-            </button>
-            <button
-              className={`mode-btn ${mode === 'music' ? 'active' : ''}`}
-              onClick={() => setMode('music')}
-            >
-              Music
-            </button>
-            <button
-              className={`mode-btn ${mode === 'entertainment' ? 'active' : ''}`}
-              onClick={() => setMode('entertainment')}
-            >
-              Entertainment
-            </button>
-            <button
-              className={`mode-btn ${mode === 'ad-creative' ? 'active' : ''}`}
-              onClick={() => setMode('ad-creative')}
-            >
-              Ad Creative
-            </button>
-            <button
-              className={`mode-btn ${mode === 'web' ? 'active' : ''}`}
-              onClick={() => setMode('web')}
-            >
-              Web Design
-            </button>
-            <button
-              className={`mode-btn ${mode === 'shopline' ? 'active' : ''}`}
-              onClick={() => {
-                setMode('shopline');
-                if (shoplineProducts.length === 0) {
-                  fetchShoplineProducts();
-                }
-              }}
-            >
-              Dropshipping
-            </button>
-            <button
-              className={`mode-btn ${mode === 'langflow' ? 'active' : ''}`}
-              onClick={() => setMode('langflow')}
-            >
-              LangFlow
-            </button>
+          <div className="mode-selector-container">
+            <div className="mode-group">
+              <span className="group-label">Core Design</span>
+              <div className="mode-selector">
+                <button
+                  className={`mode-btn ${mode === 'web' ? 'active' : ''}`}
+                  onClick={() => setMode('web')}
+                >
+                  Web Design
+                </button>
+                <button
+                  className={`mode-btn ${mode === 'graphics' ? 'active' : ''}`}
+                  onClick={() => setMode('graphics')}
+                >
+                  Graphics
+                </button>
+                <button
+                  className={`mode-btn ${mode === 'posters' ? 'active' : ''}`}
+                  onClick={() => setMode('posters')}
+                >
+                  Posters
+                </button>
+              </div>
+            </div>
+
+            <div className="mode-group">
+              <span className="group-label">AI Enhancements</span>
+              <div className="mode-selector">
+                <button
+                  className={`mode-btn enhancement ${mode === 'cinema' ? 'active' : ''}`}
+                  onClick={() => setMode('cinema')}
+                >
+                  Cinema
+                </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'music' ? 'active' : ''}`}
+                  onClick={() => setMode('music')}
+                >
+                  Music
+                </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'ad-creative' ? 'active' : ''}`}
+                  onClick={() => setMode('ad-creative')}
+                >
+                  Ads
+                </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'shopline' ? 'active' : ''}`}
+                  onClick={() => {
+                    setMode('shopline');
+                    if (shoplineProducts.length === 0) {
+                      fetchShoplineProducts();
+                    }
+                  }}
+                >
+                  Shopline
+                </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'langflow' ? 'active' : ''}`}
+                  onClick={() => setMode('langflow')}
+                >
+                  LangFlow
+                </button>
+              </div>
+            </div>
           </div>
 
           {mode === 'shopline' && (
@@ -450,13 +491,14 @@ function App() {
               type="text"
               className="input-field"
               placeholder={
+                mode === 'web' ? "e.g., Landing page for tech startup" :
+                mode === 'graphics' ? "e.g., Minimalist logo for a travel brand" :
+                mode === 'posters' ? "e.g., Minimalist film noir movie poster" :
                 mode === 'cinema' ? "e.g., Cinematic shot of a rainy street" :
                 mode === 'music' ? "e.g., Lo-fi hip hop beat for studying" :
-                mode === 'entertainment' ? "e.g., Global movie premiere poster" :
                 mode === 'ad-creative' ? "e.g., High-converting Facebook ad for sneakers" :
-                mode === 'web' ? "e.g., Landing page for tech startup" :
                 mode === 'langflow' ? "e.g., Ask anything to LangFlow..." :
-                "e.g., Dynamic product showcase video"
+                "e.g., Describe your creative vision..."
               }
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}

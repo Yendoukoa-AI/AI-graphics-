@@ -20,8 +20,8 @@ test('renders Ad Creative AI feature card', () => {
   expect(featureElement).toBeDefined();
 });
 
-test('renders Ad Creative mode button', () => {
+test('renders Ads mode button', () => {
   render(<App />);
-  const modeButton = screen.getByText(/^Ad Creative$/i);
+  const modeButton = screen.getByText(/^Ads$/i);
   expect(modeButton).toBeDefined();
 });
