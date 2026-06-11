@@ -251,6 +251,11 @@ function App() {
             <h3>Ad Creative AI</h3>
             <p>Generate high-converting ad visuals and copy for social media, search, and display campaigns.</p>
           </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">🎮</span>
+            <h3>Games Design & Dev</h3>
+            <p>Design game characters, environments, and core mechanics with specialized AI assistance.</p>
+          </div>
         </div>
       </section>
 
@@ -457,6 +462,12 @@ function App() {
                 >
                   LangFlow
                 </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'games' ? 'active' : ''}`}
+                  onClick={() => setMode('games')}
+                >
+                  Games
+                </button>
               </div>
             </div>
           </div>
@@ -498,6 +509,7 @@ function App() {
                 mode === 'music' ? "e.g., Lo-fi hip hop beat for studying" :
                 mode === 'ad-creative' ? "e.g., High-converting Facebook ad for sneakers" :
                 mode === 'langflow' ? "e.g., Ask anything to LangFlow..." :
+                mode === 'games' ? "e.g., Cyberpunk character design or RPG map layout" :
                 "e.g., Describe your creative vision..."
               }
               value={prompt}

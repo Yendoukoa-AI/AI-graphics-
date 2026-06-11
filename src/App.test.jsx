@@ -25,3 +25,15 @@ test('renders Ads mode button', () => {
   const modeButton = screen.getByText(/^Ads$/i);
   expect(modeButton).toBeDefined();
 });
+
+test('renders Games Design & Dev feature card', () => {
+  render(<App />);
+  const featureElement = screen.getByText(/Games Design & Dev/i);
+  expect(featureElement).toBeDefined();
+});
+
+test('renders Games mode button', () => {
+  render(<App />);
+  const modeButton = screen.getByText(/^Games$/i);
+  expect(modeButton).toBeDefined();
+});
