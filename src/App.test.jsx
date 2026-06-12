@@ -37,3 +37,15 @@ test('renders Games mode button', () => {
   const modeButton = screen.getByText(/^Games$/i);
   expect(modeButton).toBeDefined();
 });
+
+test('renders AI Dropshipper feature card', () => {
+  render(<App />);
+  const featureElement = screen.getByText(/AI Dropshipper/i);
+  expect(featureElement).toBeDefined();
+});
+
+test('renders Dropshipper mode button', () => {
+  render(<App />);
+  const modeButton = screen.getByText(/^Dropshipper$/i);
+  expect(modeButton).toBeDefined();
+});

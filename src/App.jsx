@@ -9,8 +9,10 @@ function App() {
   const [aiInsight, setAiInsight] = useState('');
   const [mode, setMode] = useState('web');
   const [shoplineProducts, setShoplineProducts] = useState([]);
+  const [dropshipperSuggestions, setDropshipperSuggestions] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
+  const [dropshipperNiche, setDropshipperNiche] = useState('');
   const [langflowResponse, setLangflowResponse] = useState('');
   const [user, setUser] = useState(null);
 
@@ -45,6 +47,27 @@ function App() {
       setShoplineProducts(data.products || []);
     } catch (error) {
       console.error('Error fetching Shopline products:', error);
+    } finally {
+      setIsFetchingProducts(false);
+    }
+  };
+
+  const fetchDropshipperSuggestions = async (niche = '') => {
+    setIsFetchingProducts(true);
+    const API_URL = import.meta.env.VITE_API_URL || '';
+    try {
+      const response = await fetch(`${API_URL}/api/dropshipper/suggestions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ niche }),
+      });
+      const data = await response.json();
+      setDropshipperSuggestions(data.products || []);
+    } catch (error) {
+      console.error('Error fetching dropshipper suggestions:', error);
     } finally {
       setIsFetchingProducts(false);
     }
@@ -108,7 +131,7 @@ function App() {
         body: JSON.stringify({
           prompt,
           mode,
-          product: mode === 'shopline' ? selectedProduct : null
+          product: (mode === 'shopline' || mode === 'dropshipper') ? selectedProduct : null
         }),
       });
       const data = await response.json();
@@ -255,6 +278,11 @@ function App() {
             <span className="card-icon">🎮</span>
             <h3>Games Design & Dev</h3>
             <p>Design game characters, environments, and core mechanics with specialized AI assistance.</p>
+          </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">📦</span>
+            <h3>AI Dropshipper</h3>
+            <p>Find trending products and generate high-converting marketing materials instantly with AI.</p>
           </div>
         </div>
       </section>
@@ -463,6 +491,17 @@ function App() {
                   LangFlow
                 </button>
                 <button
+                  className={`mode-btn enhancement ${mode === 'dropshipper' ? 'active' : ''}`}
+                  onClick={() => {
+                    setMode('dropshipper');
+                    if (dropshipperSuggestions.length === 0) {
+                      fetchDropshipperSuggestions();
+                    }
+                  }}
+                >
+                  Dropshipper
+                </button>
+                <button
                   className={`mode-btn enhancement ${mode === 'games' ? 'active' : ''}`}
                   onClick={() => setMode('games')}
                 >
@@ -490,6 +529,46 @@ function App() {
                     >
                       <img src={product.image || (product.images && product.images[0]?.src)} alt={product.title} />
                       <span>{product.title}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {mode === 'dropshipper' && (
+            <div className="shopline-selector">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4>AI Trending Product Suggestions</h4>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type="text"
+                    className="input-field"
+                    style={{ padding: '0.4rem', fontSize: '0.8rem', maxWidth: '150px' }}
+                    placeholder="Enter niche (e.g., Pets)"
+                    value={dropshipperNiche}
+                    onChange={(e) => setDropshipperNiche(e.target.value)}
+                  />
+                  <button className="mode-btn" onClick={() => fetchDropshipperSuggestions(dropshipperNiche)}>Refresh</button>
+                </div>
+              </div>
+              {isFetchingProducts ? (
+                <p>Finding trending products...</p>
+              ) : (
+                <div className="product-list">
+                  {dropshipperSuggestions.map(product => (
+                    <div
+                      key={product.id}
+                      className={`product-item ${selectedProduct?.id === product.id ? 'selected' : ''}`}
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setPrompt(`Create a marketing campaign for ${product.title}`);
+                      }}
+                      title={product.reason}
+                    >
+                      <img src={product.image} alt={product.title} />
+                      <span>{product.title}</span>
+                      <small style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>AI Trending</small>
                     </div>
                   ))}
                 </div>

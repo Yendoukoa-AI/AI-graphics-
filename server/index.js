@@ -70,6 +70,57 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+app.post('/api/dropshipper/suggestions', async (req, res) => {
+  const { niche } = req.body;
+
+  try {
+    let suggestions = [];
+    if (process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here') {
+      const aiPrompt = `As a dropshipping expert, suggest 5 trending products for the "${niche || 'general'}" niche. For each product, provide a title and a brief reason why it's trending. Format as a JSON array of objects with 'title' and 'reason' keys.`;
+
+      const response = await chatModel.invoke([
+        new HumanMessage(aiPrompt),
+      ]);
+
+      let content = response.content;
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        try {
+          suggestions = JSON.parse(jsonMatch[0]);
+        } catch (e) {
+          suggestions = [
+            { title: `${niche || 'Trending'} Item 1`, reason: 'Popular choice' },
+            { title: `${niche || 'Trending'} Item 2`, reason: 'High conversion rate' }
+          ];
+        }
+      } else {
+        suggestions = [
+          { title: `${niche || 'Trending'} Item 1`, reason: 'Popular choice' },
+          { title: `${niche || 'Trending'} Item 2`, reason: 'High conversion rate' }
+        ];
+      }
+    } else {
+      suggestions = [
+        { title: `Trending ${niche || 'Home'} Decor`, reason: 'Aesthetic appeal' },
+        { title: `Smart ${niche || 'Office'} Gadget`, reason: 'Productivity boost' },
+        { title: `Eco-friendly ${niche || 'Travel'} Kit`, reason: 'Sustainability trend' }
+      ];
+    }
+
+    const products = suggestions.map((s, index) => ({
+      id: `ai-suggested-${index}`,
+      title: s.title,
+      reason: s.reason,
+      image: `https://loremflickr.com/200/200/${encodeURIComponent(s.title.replace(/\s+/g, ','))}`
+    }));
+
+    res.json({ products });
+  } catch (error) {
+    console.error('Error getting AI dropshipper suggestions:', error);
+    res.status(500).json({ error: 'Failed to get suggestions' });
+  }
+});
+
 app.get('/api/shopline/products', async (req, res) => {
   const accessToken = process.env.SHOPLINE_ACCESS_TOKEN;
   const storeDomain = process.env.SHOPLINE_STORE_DOMAIN;
@@ -131,6 +182,8 @@ app.post('/api/generate', async (req, res) => {
 
       if (mode === 'shopline' && product) {
         aiPrompt = `As an e-commerce and dropshipping expert, provide a short, inspiring insight (2 sentences) for a product promotion. Product: "${product.title}". Request: "${prompt}"`;
+      } else if (mode === 'dropshipper' && product) {
+        aiPrompt = `As an AI dropshipping consultant, provide a strategic marketing insight (2 sentences) for this trending product: "${product.title}". Target: "${prompt}"`;
       } else if (mode === 'cinema') {
         aiPrompt = `As a cinematography expert, provide a short, professional insight (2 sentences) for this shot/scene request: "${prompt}"`;
       } else if (mode === 'music') {
