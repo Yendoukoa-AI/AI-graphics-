@@ -256,6 +256,11 @@ function App() {
             <h3>Games Design & Dev</h3>
             <p>Design game characters, environments, and core mechanics with specialized AI assistance.</p>
           </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">🏎️</span>
+            <h3>Automotive & Aero</h3>
+            <p>Conceptualize next-generation cars, vehicles, and aircraft with advanced aerodynamic AI modeling.</p>
+          </div>
         </div>
       </section>
 
@@ -389,6 +394,10 @@ function App() {
             </video>
             <div className="showcase-info">AI Video</div>
           </div>
+          <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/supercar,concept" alt="Automotive Design" />
+            <div className="showcase-info">Automotive</div>
+          </div>
         </div>
       </section>
 
@@ -468,6 +477,12 @@ function App() {
                 >
                   Games
                 </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'automotive' ? 'active' : ''}`}
+                  onClick={() => setMode('automotive')}
+                >
+                  Automotive
+                </button>
               </div>
             </div>
           </div>
@@ -510,6 +525,7 @@ function App() {
                 mode === 'ad-creative' ? "e.g., High-converting Facebook ad for sneakers" :
                 mode === 'langflow' ? "e.g., Ask anything to LangFlow..." :
                 mode === 'games' ? "e.g., Cyberpunk character design or RPG map layout" :
+                mode === 'automotive' ? "e.g., Futuristic electric supercar concept or sleek private jet design" :
                 "e.g., Describe your creative vision..."
               }
               value={prompt}

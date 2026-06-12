@@ -147,6 +147,8 @@ app.post('/api/generate', async (req, res) => {
         aiPrompt = `As a professional poster designer, provide a short, artistic insight (2 sentences) for this poster request: "${prompt}"`;
       } else if (mode === 'games') {
         aiPrompt = `As a game design and development expert, provide a short, strategic insight (2 sentences) for this game-related request: "${prompt}"`;
+      } else if (mode === 'automotive') {
+        aiPrompt = `As an automotive and aerospace design expert, provide a short, technical and inspiring insight (2 sentences) for this vehicle/aircraft concept: "${prompt}"`;
       }
 
       const response = await chatModel.invoke([
