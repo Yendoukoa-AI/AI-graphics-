@@ -7,13 +7,19 @@ const config = {
   expect: {
     timeout: 5000
   },
-  reporter: 'html',
+  reporter: 'list',
   use: {
     actionTimeout: 0,
     trace: 'on-first-retry',
   },
 
   projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
     {
       name: 'lambdatest-chrome',
       use: {

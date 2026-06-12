@@ -1121,6 +1121,31 @@ footer {
   letter-spacing: 1px;
 }
 
+.insight-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.icon-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
+  color: white;
+  padding: 0.4rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .share-btn {
   background: rgba(99, 102, 241, 0.2);
   border: 1px solid var(--primary-color);
@@ -1140,10 +1165,107 @@ footer {
 }
 
 .ai-insight-box p {
-  margin: 0;
+  margin: 0 0 1rem 0;
   font-size: 1rem;
   line-height: 1.5;
   color: var(--text-color);
+}
+
+.media-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.download-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.list-for-sale-btn.success {
+  background: #10b981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.success-msg {
+  color: #10b981;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+.history-section {
+  margin-top: 4rem;
+  text-align: left;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 3rem;
+}
+
+.history-section h3 {
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.history-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 1rem;
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.history-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--primary-color);
+  transform: translateY(-5px);
+}
+
+.history-thumb {
+  height: 120px;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.history-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-thumb, .text-thumb {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+.history-info {
+  padding: 1rem;
+}
+
+.history-prompt {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.25rem;
+}
+
+.history-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 @keyframes slideUp {

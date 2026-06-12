@@ -16,6 +16,10 @@ function App() {
   const [niche, setNiche] = useState('');
   const [dropshipperSuggestions, setDropshipperSuggestions] = useState([]);
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
+  const [isListing, setIsListing] = useState(false);
+  const [listSuccess, setListSuccess] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [copySuccess, setCopySuccess] = useState('');
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -100,7 +104,14 @@ function App() {
     setPreviewImage(null);
     setPreviewVideo(null);
     setLangflowResponse('');
+    setAiInsight('');
     const API_URL = import.meta.env.VITE_API_URL || '';
+
+    let result = {
+      prompt,
+      mode,
+      timestamp: new Date().toLocaleTimeString(),
+    };
 
     if (mode === 'langflow') {
       try {
@@ -114,6 +125,8 @@ function App() {
         });
         const data = await response.json();
         setLangflowResponse(data.result);
+        result.langflowResponse = data.result;
+        setHistory([result, ...history]);
       } catch (error) {
         console.error('Error with LangFlow:', error);
         setLangflowResponse('Failed to get response from LangFlow.');
@@ -139,25 +152,64 @@ function App() {
       const data = await response.json();
       if (data.imageUrl) {
         setPreviewImage(data.imageUrl);
+        result.imageUrl = data.imageUrl;
       }
       if (data.videoUrl) {
         setPreviewVideo(data.videoUrl);
+        result.videoUrl = data.videoUrl;
       }
       if (data.insight) {
         setAiInsight(data.insight);
+        result.insight = data.insight;
       }
+      setHistory([result, ...history]);
     } catch (error) {
       console.error('Error generating design:', error);
       // Fallback for demo if backend is not running
       const keywords = `${mode},${prompt}`.replace(/\s+/g, ',');
-      if (mode === 'video') {
-        setPreviewVideo('https://www.w3schools.com/html/mov_bbb.mp4');
+      let fallbackImg = null;
+      let fallbackVid = null;
+      if (mode === 'video' || mode === 'cinema') {
+        fallbackVid = 'https://www.w3schools.com/html/mov_bbb.mp4';
+        setPreviewVideo(fallbackVid);
+        result.videoUrl = fallbackVid;
       } else {
-        setPreviewImage(`https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`);
+        fallbackImg = `https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`;
+        setPreviewImage(fallbackImg);
+        result.imageUrl = fallbackImg;
       }
+      result.insight = "Design insight: Focus on balance and typography for your project.";
+      setAiInsight(result.insight);
+      setHistory([result, ...history]);
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const downloadMedia = async (url, filename) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback if fetch fails (e.g. CORS)
+      window.open(url, '_blank');
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopySuccess('Copied!');
+      setTimeout(() => setCopySuccess(''), 2000);
+    });
   };
 
   return (
@@ -479,6 +531,12 @@ function App() {
                   Music
                 </button>
                 <button
+                  className={`mode-btn enhancement ${mode === 'entertainment' ? 'active' : ''}`}
+                  onClick={() => setMode('entertainment')}
+                >
+                  Global Ent.
+                </button>
+                <button
                   className={`mode-btn enhancement ${mode === 'ad-creative' ? 'active' : ''}`}
                   onClick={() => setMode('ad-creative')}
                 >
@@ -649,19 +707,47 @@ function App() {
                   <div className="ai-insight-box">
                     <div className="insight-header">
                       <h4>AI Insight</h4>
-                      <button className="share-btn" onClick={handleShare}>
-                        <span className="share-icon">📤</span> Share
-                      </button>
+                      <div className="insight-actions">
+                        <button className="icon-btn" onClick={() => copyToClipboard(aiInsight)} title="Copy Insight">
+                          {copySuccess || '📋'}
+                        </button>
+                        <button className="share-btn" onClick={handleShare}>
+                          <span className="share-icon">📤</span> Share
+                        </button>
+                      </div>
                     </div>
                     <p>{aiInsight}</p>
+                    <div className="media-actions">
+                      {previewImage && (
+                        <button className="secondary-button download-btn" onClick={() => downloadMedia(previewImage, `design-${Date.now()}.jpg`)}>
+                          📥 Download Image
+                        </button>
+                      )}
+                      {previewVideo && (
+                        <button className="secondary-button download-btn" onClick={() => downloadMedia(previewVideo, `video-${Date.now()}.mp4`)}>
+                          📥 Download Video
+                        </button>
+                      )}
+                    </div>
                     {mode === 'dropshipper' && (
-                      <button
-                        className="cta-button list-for-sale-btn"
-                        onClick={() => alert('Product listed for sale on DesignAI Marketplace!')}
-                        style={{ marginTop: '1rem', width: '100%' }}
-                      >
-                        🚀 List for Sale & Boost Visibility
-                      </button>
+                      <div className="list-for-sale-container">
+                        <button
+                          className={`cta-button list-for-sale-btn ${listSuccess ? 'success' : ''}`}
+                          onClick={() => {
+                            setIsListing(true);
+                            setTimeout(() => {
+                              setIsListing(false);
+                              setListSuccess(true);
+                              setTimeout(() => setListSuccess(false), 3000);
+                            }, 1500);
+                          }}
+                          disabled={isListing || listSuccess}
+                          style={{ marginTop: '1rem', width: '100%' }}
+                        >
+                          {isListing ? 'Listing...' : listSuccess ? '✅ Listed on Marketplace!' : '🚀 List for Sale & Boost Visibility'}
+                        </button>
+                        {listSuccess && <p className="success-msg">Your design is now live on DesignAI Marketplace!</p>}
+                      </div>
                     )}
                   </div>
                 )}
@@ -672,6 +758,33 @@ function App() {
               </div>
             )}
           </div>
+          {history.length > 0 && (
+            <div className="history-section">
+              <h3>Generation History</h3>
+              <div className="history-grid">
+                {history.map((item, index) => (
+                  <div key={index} className="history-item" onClick={() => {
+                    setPrompt(item.prompt);
+                    setMode(item.mode);
+                    setPreviewImage(item.imageUrl);
+                    setPreviewVideo(item.videoUrl);
+                    setAiInsight(item.insight);
+                    setLangflowResponse(item.langflowResponse);
+                  }}>
+                    <div className="history-thumb">
+                      {item.imageUrl ? <img src={item.imageUrl} alt="History Thumb" /> :
+                       item.videoUrl ? <div className="video-thumb">🎥</div> :
+                       <div className="text-thumb">TXT</div>}
+                    </div>
+                    <div className="history-info">
+                      <div className="history-prompt">{item.prompt}</div>
+                      <div className="history-meta">{item.mode} • {item.timestamp}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
