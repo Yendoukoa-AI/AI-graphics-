@@ -151,6 +151,12 @@ app.post('/api/generate', async (req, res) => {
         aiPrompt = `As an automotive and aerospace design expert, provide a short, technical and inspiring insight (2 sentences) for this vehicle/aircraft concept: "${prompt}"`;
       } else if (mode === 'dropshipper') {
         aiPrompt = `As a dropshipping and e-commerce expert, provide a short, strategic insight (2 sentences) for this product discovery or marketing request: "${prompt}"`;
+      } else if (mode === 'telecoms') {
+        aiPrompt = `As a telecommunications infrastructure and network expert, provide a short, technical and strategic insight (2 sentences) for this request: "${prompt}"`;
+      } else if (mode === 'medias') {
+        aiPrompt = `As a media production and broadcasting expert, provide a short, professional insight (2 sentences) for this request: "${prompt}"`;
+      } else if (mode === 'social-networks') {
+        aiPrompt = `As a social media strategist and content creator, provide a short, high-engagement insight (2 sentences) for this request: "${prompt}"`;
       }
 
       const response = await chatModel.invoke([
