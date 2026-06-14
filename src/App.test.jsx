@@ -49,3 +49,15 @@ test('renders Automotive mode button', () => {
   const modeButtons = screen.getAllByText(/^Automotive$/i);
   expect(modeButtons.length).toBeGreaterThan(0);
 });
+
+test('renders Health AI feature card', () => {
+  render(<App />);
+  const featureElements = screen.getAllByText(/Health AI/i);
+  expect(featureElements.length).toBeGreaterThan(0);
+});
+
+test('renders Health mode button', () => {
+  render(<App />);
+  const modeButton = screen.getByText(/^Health$/i);
+  expect(modeButton).toBeDefined();
+});

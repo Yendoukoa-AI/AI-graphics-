@@ -416,6 +416,11 @@ function App() {
             <h3>Sports AI</h3>
             <p>Design sports branding, performance analytics dashboards, and global fan engagement assets.</p>
           </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">🏥</span>
+            <h3>Health AI</h3>
+            <p>Design medical interfaces, wellness apps, and health monitoring dashboards with AI-driven precision.</p>
+          </div>
         </div>
       </section>
 
@@ -557,6 +562,10 @@ function App() {
             <img src="https://loremflickr.com/400/300/sports,stadium" alt="Sports Design" />
             <div className="showcase-info">Sports AI</div>
           </div>
+          <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/medical,health" alt="Health Design" />
+            <div className="showcase-info">Health AI</div>
+          </div>
         </div>
       </section>
 
@@ -679,6 +688,12 @@ function App() {
                   Sports
                 </button>
                 <button
+                  className={`mode-btn enhancement ${mode === 'health' ? 'active' : ''}`}
+                  onClick={() => setMode('health')}
+                >
+                  Health
+                </button>
+                <button
                   className={`mode-btn enhancement ${mode === 'github' ? 'active' : ''}`}
                   onClick={() => setMode('github')}
                 >
@@ -776,6 +791,7 @@ function App() {
                 mode === 'medias' ? "e.g., News broadcast studio layout or digital magazine cover" :
                 mode === 'social-networks' ? "e.g., Viral Instagram story template or YouTube channel branding" :
                 mode === 'sports' ? "e.g., Professional football club branding or athlete performance dashboard" :
+                mode === 'health' ? "e.g., Medical dashboard interface or fitness tracking app" :
                 mode === 'github' ? "e.g., Personal portfolio for GitHub Pages or documentation site" :
                 "e.g., Describe your creative vision..."
               }
