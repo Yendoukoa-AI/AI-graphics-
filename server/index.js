@@ -162,6 +162,8 @@ app.post('/api/generate', async (req, res) => {
         aiPrompt = `As a GitHub ecosystem and open source expert, provide a short, professional insight (2 sentences) for this GitHub Pages or repository request: "${prompt}"`;
       } else if (mode === 'sports') {
         aiPrompt = `As a sports branding and performance analytics expert, provide a short, professional insight (2 sentences) for this sports-related request: "${prompt}"`;
+      } else if (mode === 'finance') {
+        aiPrompt = `As a financial technology and banking design expert, provide a short, strategic insight (2 sentences) for this request related to banks, fintechs, or mobile operators: "${prompt}"`;
       }
 
       const response = await chatModel.invoke([

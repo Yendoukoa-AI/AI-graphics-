@@ -416,6 +416,11 @@ function App() {
             <h3>Sports AI</h3>
             <p>Design sports branding, performance analytics dashboards, and global fan engagement assets.</p>
           </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">💰</span>
+            <h3>Finance AI</h3>
+            <p>Create secure and modern interfaces for banks, fintechs, and digital payment platforms.</p>
+          </div>
         </div>
       </section>
 
@@ -557,6 +562,10 @@ function App() {
             <img src="https://loremflickr.com/400/300/sports,stadium" alt="Sports Design" />
             <div className="showcase-info">Sports AI</div>
           </div>
+          <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/finance,banking" alt="Finance Design" />
+            <div className="showcase-info">Finance AI</div>
+          </div>
         </div>
       </section>
 
@@ -684,6 +693,12 @@ function App() {
                 >
                   GitHub
                 </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'finance' ? 'active' : ''}`}
+                  onClick={() => setMode('finance')}
+                >
+                  Finance
+                </button>
               </div>
             </div>
           </div>
@@ -777,6 +792,7 @@ function App() {
                 mode === 'social-networks' ? "e.g., Viral Instagram story template or YouTube channel branding" :
                 mode === 'sports' ? "e.g., Professional football club branding or athlete performance dashboard" :
                 mode === 'github' ? "e.g., Personal portfolio for GitHub Pages or documentation site" :
+                mode === 'finance' ? "e.g., Modern fintech app dashboard or secure banking portal" :
                 "e.g., Describe your creative vision..."
               }
               value={prompt}
