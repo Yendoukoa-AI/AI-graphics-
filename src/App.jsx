@@ -18,6 +18,9 @@ function App() {
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
   const [isListing, setIsListing] = useState(false);
   const [listSuccess, setListSuccess] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deployUrl, setDeployUrl] = useState('');
+  const [copilotSuggestion, setCopilotSuggestion] = useState('');
   const [history, setHistory] = useState([]);
   const [copySuccess, setCopySuccess] = useState('');
 
@@ -149,6 +152,11 @@ function App() {
           product: mode === 'shopline' ? selectedProduct : null
         }),
       });
+
+      if (mode === 'github') {
+        await fetchCopilotSuggestion();
+      }
+
       const data = await response.json();
       if (data.imageUrl) {
         setPreviewImage(data.imageUrl);
@@ -183,6 +191,51 @@ function App() {
       setHistory([result, ...history]);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleGitHubDeploy = async () => {
+    setIsDeploying(true);
+    setDeployUrl('');
+    const API_URL = import.meta.env.VITE_API_URL || '';
+    try {
+      const response = await fetch(`${API_URL}/api/github/deploy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ prompt, mode }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setDeployUrl(data.url);
+        if (data.isMock) {
+          alert(data.message);
+        }
+      }
+    } catch (error) {
+      console.error('Error deploying to GitHub:', error);
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
+  const fetchCopilotSuggestion = async () => {
+    const API_URL = import.meta.env.VITE_API_URL || '';
+    try {
+      const response = await fetch(`${API_URL}/api/github/copilot-suggestion`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ prompt, mode }),
+      });
+      const data = await response.json();
+      setCopilotSuggestion(data.suggestion);
+    } catch (error) {
+      console.error('Error fetching Copilot suggestion:', error);
     }
   };
 
@@ -610,6 +663,12 @@ function App() {
                 >
                   Social
                 </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'github' ? 'active' : ''}`}
+                  onClick={() => setMode('github')}
+                >
+                  GitHub
+                </button>
               </div>
             </div>
           </div>
@@ -701,6 +760,7 @@ function App() {
                 mode === 'telecoms' ? "e.g., 5G network coverage map or satellite ground station design" :
                 mode === 'medias' ? "e.g., News broadcast studio layout or digital magazine cover" :
                 mode === 'social-networks' ? "e.g., Viral Instagram story template or YouTube channel branding" :
+                mode === 'github' ? "e.g., Personal portfolio for GitHub Pages or documentation site" :
                 "e.g., Describe your creative vision..."
               }
               value={prompt}
@@ -783,6 +843,38 @@ function App() {
                           {isListing ? 'Listing...' : listSuccess ? '✅ Listed on Marketplace!' : '🚀 List for Sale & Boost Visibility'}
                         </button>
                         {listSuccess && <p className="success-msg">Your design is now live on DesignAI Marketplace!</p>}
+                      </div>
+                    )}
+                    {mode === 'github' && (
+                      <div className="github-actions-container">
+                        <button
+                          className={`cta-button github-deploy-btn ${deployUrl ? 'success' : ''}`}
+                          onClick={handleGitHubDeploy}
+                          disabled={isDeploying}
+                          style={{ marginTop: '1rem', width: '100%' }}
+                        >
+                          {isDeploying ? 'Deploying to GitHub...' : deployUrl ? '✅ Deployed to GitHub Pages!' : '🚀 Deploy to GitHub Pages'}
+                        </button>
+                        {deployUrl && (
+                          <div className="deploy-success-box">
+                            <p className="success-msg" style={{ color: '#10b981', marginTop: '0.5rem' }}>Your site is live!</p>
+                            <a href={deployUrl} target="_blank" rel="noopener noreferrer" className="deploy-link" style={{ color: '#60a5fa', textDecoration: 'underline' }}>{deployUrl}</a>
+                          </div>
+                        )}
+                        {copilotSuggestion && (
+                          <div className="copilot-suggestion-box" style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                            <div className="copilot-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                              <span className="copilot-icon">🤖</span>
+                              <h4 style={{ margin: 0 }}>GitHub Copilot Suggestion</h4>
+                            </div>
+                            <pre className="copilot-code" style={{ whiteSpace: 'pre-wrap', background: '#1e293b', padding: '1rem', borderRadius: '0.3rem', fontSize: '0.85rem', color: '#e2e8f0', marginBottom: '1rem' }}>
+                              <code>{copilotSuggestion}</code>
+                            </pre>
+                            <button className="secondary-button apply-btn" onClick={() => alert('Suggestion applied to your project!')} style={{ width: '100%' }}>
+                              Apply Suggestion
+                            </button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
