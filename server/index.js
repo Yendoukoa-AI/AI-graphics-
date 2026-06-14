@@ -164,6 +164,8 @@ app.post('/api/generate', async (req, res) => {
         aiPrompt = `As a sports branding and performance analytics expert, provide a short, professional insight (2 sentences) for this sports-related request: "${prompt}"`;
       } else if (mode === 'health') {
         aiPrompt = `As a medical interface and healthcare design expert, provide a short, professional and precise insight (2 sentences) for this health-related request: "${prompt}"`;
+      } else if (mode === 'finance') {
+        aiPrompt = `As a finance AI expert for banks, insurance, VC, fintechs, and mobile operators, provide a short, professional and strategic marketing/product insight (2 sentences) for this request: "${prompt}"`;
       }
 
       const response = await chatModel.invoke([
