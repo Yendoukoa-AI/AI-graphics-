@@ -343,6 +343,21 @@ function App() {
             <h3>AI Dropshipper</h3>
             <p>Discover trending products, generate marketing strategies, and boost e-commerce visibility with AI.</p>
           </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">📡</span>
+            <h3>Telecoms AI</h3>
+            <p>Optimize network layouts, visualize signal coverage, and design telecommunication infrastructure.</p>
+          </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">📺</span>
+            <h3>Medias AI</h3>
+            <p>Generate broadcast graphics, news layouts, and multimedia content for digital broadcasting.</p>
+          </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">📱</span>
+            <h3>Social Networks AI</h3>
+            <p>Create viral content, profile aesthetics, and engaging social media campaign assets.</p>
+          </div>
         </div>
       </section>
 
@@ -577,6 +592,24 @@ function App() {
                 >
                   Dropshipper
                 </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'telecoms' ? 'active' : ''}`}
+                  onClick={() => setMode('telecoms')}
+                >
+                  Telecoms
+                </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'medias' ? 'active' : ''}`}
+                  onClick={() => setMode('medias')}
+                >
+                  Medias
+                </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'social-networks' ? 'active' : ''}`}
+                  onClick={() => setMode('social-networks')}
+                >
+                  Social
+                </button>
               </div>
             </div>
           </div>
@@ -665,6 +698,9 @@ function App() {
                 mode === 'langflow' ? "e.g., Ask anything to LangFlow..." :
                 mode === 'games' ? "e.g., Cyberpunk character design or RPG map layout" :
                 mode === 'automotive' ? "e.g., Futuristic electric supercar concept or sleek private jet design" :
+                mode === 'telecoms' ? "e.g., 5G network coverage map or satellite ground station design" :
+                mode === 'medias' ? "e.g., News broadcast studio layout or digital magazine cover" :
+                mode === 'social-networks' ? "e.g., Viral Instagram story template or YouTube channel branding" :
                 "e.g., Describe your creative vision..."
               }
               value={prompt}
