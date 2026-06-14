@@ -20,6 +20,7 @@ function App() {
   const [listSuccess, setListSuccess] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
   const [deployUrl, setDeployUrl] = useState('');
+  const [repoUrl, setRepoUrl] = useState('');
   const [copilotSuggestion, setCopilotSuggestion] = useState('');
   const [history, setHistory] = useState([]);
   const [copySuccess, setCopySuccess] = useState('');
@@ -197,6 +198,7 @@ function App() {
   const handleGitHubDeploy = async () => {
     setIsDeploying(true);
     setDeployUrl('');
+    setRepoUrl('');
     const API_URL = import.meta.env.VITE_API_URL || '';
     try {
       const response = await fetch(`${API_URL}/api/github/deploy`, {
@@ -210,6 +212,11 @@ function App() {
       const data = await response.json();
       if (data.success) {
         setDeployUrl(data.url);
+        if (data.repoUrl) {
+          setRepoUrl(data.repoUrl);
+        } else if (data.isMock) {
+          setRepoUrl(data.url.replace('.github.io/', '/').replace('https://', 'https://github.com/'));
+        }
         if (data.isMock) {
           alert(data.message);
         }
@@ -274,6 +281,7 @@ function App() {
           <a href="#editor">Editor</a>
           <a href="#pricing">Pricing</a>
           <a href="#showcase">Showcase</a>
+          <a href="https://github.com/GYFX35/AI-graphics-/releases" target="_blank" rel="noopener noreferrer">View on GitHub Session</a>
         </div>
         <div className="nav-actions">
           <button className="sponsor-button">Sponsor</button>
@@ -712,7 +720,7 @@ function App() {
                   className={`mode-btn enhancement ${mode === 'github' ? 'active' : ''}`}
                   onClick={() => setMode('github')}
                 >
-                  GitHub
+                  View on GitHub Session
                 </button>
               </div>
             </div>
@@ -906,7 +914,12 @@ function App() {
                         {deployUrl && (
                           <div className="deploy-success-box">
                             <p className="success-msg" style={{ color: '#10b981', marginTop: '0.5rem' }}>Your site is live!</p>
-                            <a href={deployUrl} target="_blank" rel="noopener noreferrer" className="deploy-link" style={{ color: '#60a5fa', textDecoration: 'underline' }}>{deployUrl}</a>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              <a href={deployUrl} target="_blank" rel="noopener noreferrer" className="deploy-link" style={{ color: '#60a5fa', textDecoration: 'underline' }}>{deployUrl}</a>
+                              {repoUrl && (
+                                <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="repo-link" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 'bold' }}>View on GitHub Session</a>
+                              )}
+                            </div>
                           </div>
                         )}
                         {copilotSuggestion && (
