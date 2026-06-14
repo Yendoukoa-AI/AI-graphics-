@@ -411,6 +411,11 @@ function App() {
             <h3>Social Networks AI</h3>
             <p>Create viral content, profile aesthetics, and engaging social media campaign assets.</p>
           </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">🏆</span>
+            <h3>Sports AI</h3>
+            <p>Design sports branding, performance analytics dashboards, and global fan engagement assets.</p>
+          </div>
         </div>
       </section>
 
@@ -548,6 +553,10 @@ function App() {
             <img src="https://loremflickr.com/400/300/supercar,concept" alt="Automotive Design" />
             <div className="showcase-info">Automotive</div>
           </div>
+          <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/sports,stadium" alt="Sports Design" />
+            <div className="showcase-info">Sports AI</div>
+          </div>
         </div>
       </section>
 
@@ -664,6 +673,12 @@ function App() {
                   Social
                 </button>
                 <button
+                  className={`mode-btn enhancement ${mode === 'sports' ? 'active' : ''}`}
+                  onClick={() => setMode('sports')}
+                >
+                  Sports
+                </button>
+                <button
                   className={`mode-btn enhancement ${mode === 'github' ? 'active' : ''}`}
                   onClick={() => setMode('github')}
                 >
@@ -760,6 +775,7 @@ function App() {
                 mode === 'telecoms' ? "e.g., 5G network coverage map or satellite ground station design" :
                 mode === 'medias' ? "e.g., News broadcast studio layout or digital magazine cover" :
                 mode === 'social-networks' ? "e.g., Viral Instagram story template or YouTube channel branding" :
+                mode === 'sports' ? "e.g., Professional football club branding or athlete performance dashboard" :
                 mode === 'github' ? "e.g., Personal portfolio for GitHub Pages or documentation site" :
                 "e.g., Describe your creative vision..."
               }
