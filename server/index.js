@@ -4,6 +4,7 @@ const path = require('path');
 const axios = require('axios');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const FacebookStrategy = require('passport-facebook').Strategy;
 const session = require('express-session');
 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
 const { HumanMessage } = require('@langchain/core/messages');
@@ -35,6 +36,7 @@ app.use(passport.session());
 
 // Passport Google Strategy
 const isGoogleConfigured = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+const isFacebookConfigured = !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET);
 
 if (isGoogleConfigured) {
   passport.use(new GoogleStrategy({
@@ -50,13 +52,30 @@ if (isGoogleConfigured) {
   ));
 }
 
+if (isFacebookConfigured) {
+  passport.use(new FacebookStrategy({
+      clientID: process.env.FACEBOOK_APP_ID,
+      clientSecret: process.env.FACEBOOK_APP_SECRET,
+      callbackURL: "/auth/facebook/callback",
+      profileFields: ['id', 'displayName', 'photos', 'email'],
+      proxy: true
+    },
+    (accessToken, refreshToken, profile, done) => {
+      // Store the access token if needed for Graph API calls later
+      profile.accessToken = accessToken;
+      return done(null, profile);
+    }
+  ));
+}
+
 passport.serializeUser((user, done) => {
   // Store only the essential info in the session
   done(null, {
     id: user.id,
     displayName: user.displayName,
     photos: user.photos,
-    emails: user.emails
+    emails: user.emails,
+    accessToken: user.accessToken // Crucial for Facebook Graph API calls
   });
 });
 
@@ -214,6 +233,24 @@ app.get('/auth/google/callback', (req, res, next) => {
     return res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
   }
   passport.authenticate('google', { failureRedirect: '/' })(req, res, next);
+}, (req, res) => {
+  // Successful authentication, redirect home.
+  res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
+});
+
+// Facebook Auth Routes
+app.get('/auth/facebook', (req, res, next) => {
+  if (!isFacebookConfigured) {
+    return res.status(501).json({ error: 'Facebook OAuth not configured' });
+  }
+  passport.authenticate('facebook', { scope: ['email', 'public_profile'] })(req, res, next);
+});
+
+app.get('/auth/facebook/callback', (req, res, next) => {
+  if (!isFacebookConfigured) {
+    return res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
+  }
+  passport.authenticate('facebook', { failureRedirect: '/' })(req, res, next);
 }, (req, res) => {
   // Successful authentication, redirect home.
   res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
@@ -404,6 +441,26 @@ app.post('/api/dropshipper/suggestions', async (req, res) => {
   } catch (error) {
     console.error('Error with Google AI API for dropshipper:', error);
     res.status(500).json({ error: 'Failed to generate suggestions' });
+  }
+});
+
+app.post('/api/facebook/post', async (req, res) => {
+  if (!req.isAuthenticated() || !req.user.accessToken) {
+    return res.status(401).json({ error: 'Not authenticated with Facebook' });
+  }
+
+  const { message, link } = req.body;
+
+  try {
+    const response = await axios.post(`https://graph.facebook.com/me/feed`, {
+      message,
+      link,
+      access_token: req.user.accessToken
+    });
+    res.json({ success: true, data: response.data });
+  } catch (error) {
+    console.error('Error posting to Facebook:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to post to Facebook', details: error.response?.data });
   }
 });
 
