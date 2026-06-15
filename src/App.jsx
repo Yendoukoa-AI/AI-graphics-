@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import './App.css';
+
+// Fix for Leaflet default icon issues in React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 function App() {
   const [prompt, setPrompt] = useState('');
@@ -24,6 +35,8 @@ function App() {
   const [copilotSuggestion, setCopilotSuggestion] = useState('');
   const [history, setHistory] = useState([]);
   const [copySuccess, setCopySuccess] = useState('');
+  const [cameraStream, setCameraStream] = useState(null);
+  const videoRef = React.useRef(null);
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -83,27 +96,71 @@ function App() {
     }
   };
 
-  const handleShare = async () => {
-    const shareData = {
-      title: 'DesignAI Studio Generation',
-      text: `Check out this ${mode} I generated with DesignAI Studio: ${prompt}`,
-      url: previewVideo || previewImage || window.location.href,
-    };
+  const handleShare = async (platform) => {
+    const shareUrl = previewVideo || previewImage || window.location.href;
+    const shareText = `Check out this ${mode} I generated with DesignAI Studio: ${prompt}`;
 
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareData.url);
-        alert('Link copied to clipboard!');
+    if (platform === 'native' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'DesignAI Studio Generation',
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
       }
-    } catch (err) {
-      console.error('Error sharing:', err);
+    } else if (platform === 'twitter') {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+    } else if (platform === 'linkedin') {
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank');
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Link copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
     }
   };
 
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setCameraStream(stream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      alert("Could not access camera. Please check permissions.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+  };
+
+  const takePhoto = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/png');
+    setPreviewImage(dataUrl);
+    stopCamera();
+    setMode('graphics'); // Switch to graphics to "edit" the photo
+    setAiInsight("Snapshot captured! Use our AI tools to enhance this photo.");
+  };
+
   const handleGenerate = async () => {
-    if (!prompt) return;
+    if (!prompt && mode !== 'camera' && mode !== 'maps') return;
     setIsGenerating(true);
     setPreviewImage(null);
     setPreviewVideo(null);
@@ -301,6 +358,12 @@ function App() {
 
       <header className="hero">
         <div className="hero-badge">The Ultimate AI Creative Suite 🌐 🎨 🖼️</div>
+        {!user && (
+          <div className="auth-nudge" style={{ marginBottom: '1rem', background: 'rgba(99, 102, 241, 0.1)', padding: '0.5rem 1rem', borderRadius: '1rem', display: 'inline-block', border: '1px solid var(--primary-color)' }}>
+            <span style={{ fontSize: '0.9rem', marginRight: '0.5rem' }}>🔐 Login to save your designs and access premium features</span>
+            <a href={`${API_URL}/auth/google`} className="login-btn" style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>Connect with Google</a>
+          </div>
+        )}
         <h1>Professional AI Design <br />for Modern Creators</h1>
         <p>Generate responsive web layouts, professional graphics, and stunning posters instantly. Now featuring enhanced Cinematography and Music AI capabilities.</p>
         <div className="hero-actions">
@@ -762,6 +825,21 @@ function App() {
                   Art AI
                 </button>
                 <button
+                  className={`mode-btn enhancement ${mode === 'camera' ? 'active' : ''}`}
+                  onClick={() => {
+                    setMode('camera');
+                    startCamera();
+                  }}
+                >
+                  📸 Camera
+                </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'maps' ? 'active' : ''}`}
+                  onClick={() => setMode('maps')}
+                >
+                  🗺️ Maps AI
+                </button>
+                <button
                   className={`mode-btn enhancement ${mode === 'github' ? 'active' : ''}`}
                   onClick={() => setMode('github')}
                 >
@@ -886,7 +964,29 @@ function App() {
                 <p>AI is thinking...</p>
               </div>
             )}
-            {previewImage || previewVideo || langflowResponse ? (
+            {mode === 'camera' && cameraStream ? (
+              <div className="camera-preview" style={{ width: '100%', height: '100%', position: 'relative' }}>
+                <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div className="camera-controls" style={{ position: 'absolute', bottom: '2rem', left: '0', right: '0', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+                  <button className="cta-button" onClick={takePhoto}>📸 Capture</button>
+                  <button className="secondary-button" onClick={stopCamera} style={{ background: 'rgba(0,0,0,0.5)' }}>Cancel</button>
+                </div>
+              </div>
+            ) : mode === 'maps' ? (
+              <div className="maps-container" style={{ width: '100%', height: '100%' }}>
+                <MapContainer center={[51.505, -0.09]} zoom={13} scrollWheelZoom={false} style={{ width: '100%', height: '100%' }}>
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <Marker position={[51.505, -0.09]}>
+                    <Popup>
+                      DesignAI Studio <br /> Map Integration.
+                    </Popup>
+                  </Marker>
+                </MapContainer>
+              </div>
+            ) : previewImage || previewVideo || langflowResponse ? (
               <div className="preview-container">
                 {langflowResponse && (
                   <div className="langflow-response-box">
@@ -911,9 +1011,13 @@ function App() {
                         <button className="icon-btn" onClick={() => copyToClipboard(aiInsight)} title="Copy Insight">
                           {copySuccess || '📋'}
                         </button>
-                        <button className="share-btn" onClick={handleShare}>
-                          <span className="share-icon">📤</span> Share
-                        </button>
+                <div className="share-actions">
+                  <button className="share-btn" onClick={() => handleShare('native')}>
+                    <span className="share-icon">📤</span> Share
+                  </button>
+                  <button className="icon-btn" onClick={() => handleShare('twitter')} title="Share on Twitter">𝕏</button>
+                  <button className="icon-btn" onClick={() => handleShare('linkedin')} title="Share on LinkedIn">in</button>
+                </div>
                       </div>
                     </div>
                     <p>{aiInsight}</p>
