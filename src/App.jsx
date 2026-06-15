@@ -347,6 +347,16 @@ function App() {
           <p>Generate responsive layouts, UI components, and complete landing pages from simple text descriptions.</p>
         </div>
         <div className="card">
+          <span className="card-icon">📱</span>
+          <h3>Mobile Design AI</h3>
+          <p>Create stunning mobile app interfaces, touch-optimized components, and adaptive mobile web layouts.</p>
+        </div>
+        <div className="card">
+          <span className="card-icon">💻</span>
+          <h3>Desktop App AI</h3>
+          <p>Design professional desktop application interfaces, complex dashboards, and multi-window software layouts.</p>
+        </div>
+        <div className="card">
           <span className="card-icon">🎨</span>
           <h3>Graphic & Photoshop</h3>
           <p>Advanced AI tools for image manipulation, background removal, and professional photo retouching.</p>
@@ -555,6 +565,14 @@ function App() {
             <div className="showcase-info">Web Design</div>
           </div>
           <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/mobile,app,interface" alt="Mobile Design" />
+            <div className="showcase-info">Mobile Design</div>
+          </div>
+          <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/desktop,software,dashboard" alt="Desktop App" />
+            <div className="showcase-info">Desktop App</div>
+          </div>
+          <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/photography,retouch" alt="Photoshop" />
             <div className="showcase-info">Photoshop</div>
           </div>
@@ -611,6 +629,18 @@ function App() {
                   onClick={() => setMode('web')}
                 >
                   Web Design
+                </button>
+                <button
+                  className={`mode-btn ${mode === 'mobile' ? 'active' : ''}`}
+                  onClick={() => setMode('mobile')}
+                >
+                  Mobile Design
+                </button>
+                <button
+                  className={`mode-btn ${mode === 'desktop' ? 'active' : ''}`}
+                  onClick={() => setMode('desktop')}
+                >
+                  Desktop App
                 </button>
                 <button
                   className={`mode-btn ${mode === 'graphics' ? 'active' : ''}`}
@@ -817,6 +847,8 @@ function App() {
               className="input-field"
               placeholder={
                 mode === 'web' ? "e.g., Landing page for tech startup" :
+                mode === 'mobile' ? "e.g., E-commerce mobile app UI or fitness tracker interface" :
+                mode === 'desktop' ? "e.g., Project management dashboard or professional video editor layout" :
                 mode === 'graphics' ? "e.g., Minimalist logo for a travel brand" :
                 mode === 'posters' ? "e.g., Minimalist film noir movie poster" :
                 mode === 'cinema' ? "e.g., Cinematic shot of a rainy street" :
