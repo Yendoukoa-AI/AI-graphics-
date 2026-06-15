@@ -1277,3 +1277,43 @@ footer {
   text-decoration: underline !important;
   opacity: 0.8;
 }
+
+.auth-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.login-btn.google {
+  background: #ea4335;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.login-btn.facebook {
+  background: #1877f2;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.share-btn.facebook-share {
+  background: rgba(24, 119, 242, 0.2);
+  border-color: #1877f2;
+}
+
+.share-btn.facebook-share:hover {
+  background: #1877f2;
+}
+
+.facebook-post-btn {
+  background: #1877f2;
+  color: white;
+  border: none;
+}
+
+.facebook-post-btn:hover {
+  background: #166fe5;
+}

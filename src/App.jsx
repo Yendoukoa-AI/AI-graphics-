@@ -24,11 +24,34 @@ function App() {
   const [copilotSuggestion, setCopilotSuggestion] = useState('');
   const [history, setHistory] = useState([]);
   const [copySuccess, setCopySuccess] = useState('');
+  const [isPostingToFacebook, setIsPostingToFacebook] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
   useEffect(() => {
     fetchUser();
+
+    // Initialize Facebook SDK
+    window.fbAsyncInit = function() {
+      window.FB.init({
+        appId      : import.meta.env.VITE_FACEBOOK_APP_ID || 'dummy-id',
+        cookie     : true,
+        xfbml      : true,
+        version    : 'v18.0'
+      });
+    };
+
+    (function(d, s, id){
+       var js, fjs = d.getElementsByTagName(s)[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement(s); js.id = id;
+       js.src = "https://connect.facebook.net/en_US/sdk.js";
+       if (fjs && fjs.parentNode) {
+         fjs.parentNode.insertBefore(js, fjs);
+       } else {
+         d.head.appendChild(js);
+       }
+     }(document, 'script', 'facebook-jssdk'));
   }, []);
 
   const fetchUser = async () => {
@@ -99,6 +122,47 @@ function App() {
       }
     } catch (err) {
       console.error('Error sharing:', err);
+    }
+  };
+
+  const handleFacebookShare = () => {
+    if (window.FB) {
+      window.FB.ui({
+        method: 'share',
+        href: previewVideo || previewImage || window.location.href,
+        quote: `Check out this ${mode} I generated with DesignAI Studio: ${prompt}`,
+      }, function(response){});
+    } else {
+      const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewVideo || previewImage || window.location.href)}`;
+      window.open(url, '_blank', 'width=600,height=400');
+    }
+  };
+
+  const handlePostToFacebookAPI = async () => {
+    setIsPostingToFacebook(true);
+    try {
+      const response = await fetch(`${API_URL}/api/facebook/post`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          message: `Check out my new design: ${prompt}`,
+          link: previewVideo || previewImage || window.location.href,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert('Successfully posted to your Facebook feed!');
+      } else {
+        alert('Failed to post: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error posting to Facebook:', error);
+      alert('Error posting to Facebook. Make sure you are logged in with Facebook.');
+    } finally {
+      setIsPostingToFacebook(false);
     }
   };
 
@@ -294,7 +358,10 @@ function App() {
               </div>
             </div>
           ) : (
-            <a href={`${API_URL}/auth/google`} className="cta-button login-btn">Login with Google</a>
+            <div className="auth-buttons">
+              <a href={`${API_URL}/auth/google`} className="cta-button login-btn google">Login with Google</a>
+              <a href={`${API_URL}/auth/facebook`} className="cta-button login-btn facebook">Login with Facebook</a>
+            </div>
           )}
         </div>
       </nav>
@@ -914,6 +981,9 @@ function App() {
                         <button className="share-btn" onClick={handleShare}>
                           <span className="share-icon">📤</span> Share
                         </button>
+                        <button className="share-btn facebook-share" onClick={handleFacebookShare}>
+                          <span className="share-icon">f</span> Facebook Share
+                        </button>
                       </div>
                     </div>
                     <p>{aiInsight}</p>
@@ -926,6 +996,15 @@ function App() {
                       {previewVideo && (
                         <button className="secondary-button download-btn" onClick={() => downloadMedia(previewVideo, `video-${Date.now()}.mp4`)}>
                           📥 Download Video
+                        </button>
+                      )}
+                      {user && (
+                        <button
+                          className="secondary-button facebook-post-btn"
+                          onClick={handlePostToFacebookAPI}
+                          disabled={isPostingToFacebook}
+                        >
+                          {isPostingToFacebook ? 'Posting...' : '📱 Post to Facebook Feed'}
                         </button>
                       )}
                     </div>
