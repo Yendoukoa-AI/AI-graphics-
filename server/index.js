@@ -142,6 +142,10 @@ app.post('/api/generate', async (req, res) => {
         aiPrompt = `As an expert ad creative director, provide a short, high-conversion insight (2 sentences) for this advertisement request: "${prompt}"`;
       } else if (mode === 'web') {
         aiPrompt = `As a professional web designer, provide a short, strategic insight (2 sentences) for this layout request: "${prompt}"`;
+      } else if (mode === 'mobile') {
+        aiPrompt = `As a mobile UI/UX design expert, provide a short, professional insight (2 sentences) for this mobile app/interface request: "${prompt}"`;
+      } else if (mode === 'desktop') {
+        aiPrompt = `As a desktop software interface design expert, provide a short, strategic insight (2 sentences) for this application layout request: "${prompt}"`;
       } else if (mode === 'graphics') {
         aiPrompt = `As a graphic design expert, provide a short, professional insight (2 sentences) for this graphic request: "${prompt}"`;
       } else if (mode === 'posters') {
