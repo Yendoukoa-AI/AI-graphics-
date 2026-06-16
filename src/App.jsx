@@ -1,5 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import './App.css';
+
+// Fix for Leaflet marker icon issue in React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+function MapUpdater({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, 13);
+  }, [center, map]);
+  return null;
+}
 
 function App() {
   const [prompt, setPrompt] = useState('');
@@ -25,6 +44,12 @@ function App() {
   const [history, setHistory] = useState([]);
   const [copySuccess, setCopySuccess] = useState('');
   const [isPostingToFacebook, setIsPostingToFacebook] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [mapResults, setMapResults] = useState([]);
+  const [mapCenter, setMapCenter] = useState([37.7749, -122.4194]); // Default to SF
+  const [isTakingScreenshot, setIsTakingScreenshot] = useState(false);
+  const [screenshotResult, setScreenshotResult] = useState(null);
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -138,6 +163,82 @@ function App() {
     }
   };
 
+  const handleGoogleSearch = async () => {
+    if (!prompt) return;
+    setIsSearching(true);
+    try {
+      const response = await fetch(`${API_URL}/api/google/search?q=${encodeURIComponent(prompt)}`, {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data.error) {
+        alert('Search error: ' + data.error);
+        setSearchResults([]);
+      } else {
+        setSearchResults(data.items || []);
+      }
+    } catch (error) {
+      console.error('Error with Google search:', error);
+      alert('Failed to connect to search service.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleGooglePlaces = async () => {
+    if (!prompt) return;
+    setIsGenerating(true);
+    try {
+      const response = await fetch(`${API_URL}/api/google/places?q=${encodeURIComponent(prompt)}`, {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data.error) {
+        alert('Maps error: ' + data.error);
+        setMapResults([]);
+      } else {
+        setMapResults(data.results || []);
+        if (data.results && data.results.length > 0) {
+          const first = data.results[0].geometry.location;
+          setMapCenter([first.lat, first.lng]);
+        } else {
+          alert('No results found for this location.');
+        }
+      }
+    } catch (error) {
+      console.error('Error with Google places:', error);
+      alert('Failed to connect to maps service.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleTakeScreenshot = async (urlToCapture) => {
+    setIsTakingScreenshot(true);
+    setScreenshotResult(null);
+    try {
+      const response = await fetch(`${API_URL}/api/chrome/screenshot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ url: urlToCapture }),
+      });
+      const data = await response.json();
+      if (data.screenshot) {
+        setScreenshotResult(data.screenshot);
+      } else {
+        alert('Failed to take screenshot: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error taking screenshot:', error);
+      alert('Error taking screenshot.');
+    } finally {
+      setIsTakingScreenshot(false);
+    }
+  };
+
   const handlePostToFacebookAPI = async () => {
     setIsPostingToFacebook(true);
     try {
@@ -180,6 +281,10 @@ function App() {
       mode,
       timestamp: new Date().toLocaleTimeString(),
     };
+
+    if (mode === 'maps') {
+      await handleGooglePlaces();
+    }
 
     if (mode === 'langflow') {
       try {
@@ -521,6 +626,11 @@ function App() {
             <h3>Global Education AI</h3>
             <p>Design interactive learning platforms, educational content, and global classroom experiences with AI.</p>
           </div>
+        <div className="card enhancement-card">
+          <span className="card-icon">🗺️</span>
+          <h3>Maps AI</h3>
+          <p>Integrate interactive maps, geolocation features, and geographic data visualization into your designs.</p>
+        </div>
         </div>
       </section>
 
@@ -686,6 +796,10 @@ function App() {
             <img src="https://loremflickr.com/400/300/education,learning" alt="Global Education" />
             <div className="showcase-info">Global Education</div>
           </div>
+          <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/map,geography" alt="Maps AI" />
+            <div className="showcase-info">Maps AI</div>
+          </div>
         </div>
       </section>
 
@@ -844,6 +958,12 @@ function App() {
                   Education
                 </button>
                 <button
+                  className={`mode-btn enhancement ${mode === 'maps' ? 'active' : ''}`}
+                  onClick={() => setMode('maps')}
+                >
+                  Maps AI
+                </button>
+                <button
                   className={`mode-btn enhancement ${mode === 'github' ? 'active' : ''}`}
                   onClick={() => setMode('github')}
                 >
@@ -924,10 +1044,11 @@ function App() {
           )}
 
           <div className="editor-controls">
-            <input
-              type="text"
-              className="input-field"
-              placeholder={
+            <div className="input-group-wrapper">
+              <input
+                type="text"
+                className="input-field"
+                placeholder={
                 mode === 'web' ? "e.g., Landing page for tech startup" :
                 mode === 'mobile' ? "e.g., E-commerce mobile app UI or fitness tracker interface" :
                 mode === 'desktop' ? "e.g., Project management dashboard or professional video editor layout" :
@@ -950,9 +1071,18 @@ function App() {
                 mode === 'github' ? "e.g., Personal portfolio for GitHub Pages or documentation site" :
                 "e.g., Describe your creative vision..."
               }
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+              />
+              <button
+                className="search-insp-btn"
+                onClick={handleGoogleSearch}
+                disabled={isSearching}
+                title="Search Design Inspiration"
+              >
+                {isSearching ? '🔍' : '💡'}
+              </button>
+            </div>
             <button
               className="cta-button"
               onClick={handleGenerate}
@@ -961,6 +1091,23 @@ function App() {
               {isGenerating ? 'Generating...' : 'Generate Design'}
             </button>
           </div>
+
+          {searchResults.length > 0 && (
+            <div className="search-results-overlay">
+              <div className="search-results-header">
+                <h4>Design Inspiration for "{prompt}"</h4>
+                <button onClick={() => setSearchResults([])}>✕</button>
+              </div>
+              <div className="search-results-list">
+                {searchResults.map((item, index) => (
+                  <div key={index} className="search-result-item">
+                    <a href={item.link} target="_blank" rel="noopener noreferrer">{item.title}</a>
+                    <p>{item.snippet}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="preview-area">
             {isGenerating && (
@@ -977,6 +1124,25 @@ function App() {
                     <div className="langflow-content">
                       {langflowResponse}
                     </div>
+                  </div>
+                )}
+                {mode === 'maps' && mapResults.length > 0 && (
+                  <div className="map-preview-container">
+                    <MapContainer center={mapCenter} zoom={13} style={{ height: '400px', width: '100%', borderRadius: '1rem' }}>
+                      <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      />
+                      <MapUpdater center={mapCenter} />
+                      {mapResults.map((place, idx) => (
+                        <Marker key={idx} position={[place.geometry.location.lat, place.geometry.location.lng]}>
+                          <Popup>
+                            <strong>{place.name}</strong><br />
+                            {place.formatted_address}
+                          </Popup>
+                        </Marker>
+                      ))}
+                    </MapContainer>
                   </div>
                 )}
                 {previewImage && <img src={previewImage} alt="Generated Design" className="placeholder-img" />}
@@ -1004,6 +1170,13 @@ function App() {
                     </div>
                     <p>{aiInsight}</p>
                     <div className="media-actions">
+                      <button
+                        className="secondary-button screenshot-btn"
+                        onClick={() => handleTakeScreenshot(window.location.href)}
+                        disabled={isTakingScreenshot}
+                      >
+                        {isTakingScreenshot ? '📸 Capturing...' : '📸 Take App Screenshot'}
+                      </button>
                       {previewImage && (
                         <button className="secondary-button download-btn" onClick={() => downloadMedia(previewImage, `design-${Date.now()}.jpg`)}>
                           📥 Download Image
@@ -1042,6 +1215,15 @@ function App() {
                           {isListing ? 'Listing...' : listSuccess ? '✅ Listed on Marketplace!' : '🚀 List for Sale & Boost Visibility'}
                         </button>
                         {listSuccess && <p className="success-msg">Your design is now live on DesignAI Marketplace!</p>}
+                      </div>
+                    )}
+                    {screenshotResult && (
+                      <div className="screenshot-result-box" style={{ marginTop: '1rem' }}>
+                        <h4>App Screenshot Capture</h4>
+                        <img src={screenshotResult} alt="App Screenshot" style={{ width: '100%', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }} />
+                        <button className="secondary-button" onClick={() => downloadMedia(screenshotResult, `screenshot-${Date.now()}.png`)} style={{ marginTop: '0.5rem', width: '100%' }}>
+                          📥 Download Screenshot
+                        </button>
                       </div>
                     )}
                     {mode === 'github' && (

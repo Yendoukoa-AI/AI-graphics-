@@ -10,10 +10,23 @@ const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
 const { ChatAnthropic } = require('@langchain/anthropic');
 const { HumanMessage } = require('@langchain/core/messages');
 const { Octokit } = require('octokit');
+const { google } = require('googleapis');
+const puppeteer = require('puppeteer');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Shared Puppeteer browser instance for efficiency
+let sharedBrowser = null;
+const getBrowser = async () => {
+  if (!sharedBrowser || !sharedBrowser.connected) {
+    sharedBrowser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    });
+  }
+  return sharedBrowser;
+};
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -204,6 +217,8 @@ app.post('/api/generate', async (req, res) => {
         aiPrompt = `As a professional AI artist and digital painter, provide a short, inspiring insight (2 sentences) about the artistic style and technique for this request: "${prompt}"`;
       } else if (mode === 'education') {
         aiPrompt = `As a global education and ed-tech expert, provide a short, professional and strategic insight (2 sentences) for this educational design or content request: "${prompt}"`;
+      } else if (mode === 'maps') {
+        aiPrompt = `As a geographic design and cartography expert, provide a short, professional insight (2 sentences) for this map-related design request: "${prompt}"`;
       }
 
       const response = await chatModel.invoke([
@@ -462,6 +477,128 @@ app.post('/api/dropshipper/suggestions', async (req, res) => {
   } catch (error) {
     console.error('Error with Google AI API for dropshipper:', error);
     res.status(500).json({ error: 'Failed to generate suggestions' });
+  }
+});
+
+app.get('/api/google/search', async (req, res) => {
+  const { q } = req.query;
+  const API_KEY = process.env.GOOGLE_SEARCH_API_KEY;
+  const SEARCH_ENGINE_ID = process.env.GOOGLE_SEARCH_ENGINE_ID;
+
+  if (!API_KEY || !SEARCH_ENGINE_ID) {
+    return res.json({
+      items: [
+        { title: `Mock Result for ${q}`, link: 'https://example.com', snippet: 'Google Search API is not configured. This is mock data.' },
+        { title: 'Design Inspiration', link: 'https://dribbble.com', snippet: 'Check out Dribbble for amazing design ideas.' }
+      ],
+      isMock: true
+    });
+  }
+
+  const customsearch = google.customsearch('v1');
+  try {
+    const response = await customsearch.cse.list({
+      auth: API_KEY,
+      cx: SEARCH_ENGINE_ID,
+      q: q,
+    });
+    res.json({ items: response.data.items });
+  } catch (error) {
+    console.error('Error with Google Search API:', error);
+    res.status(500).json({ error: 'Failed to fetch search results' });
+  }
+});
+
+app.get('/api/google/places', async (req, res) => {
+  const { q } = req.query;
+  const API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+
+  if (!API_KEY) {
+    return res.json({
+      results: [
+        { name: 'Mock Place', formatted_address: '123 AI Street, Tech City', geometry: { location: { lat: 37.7749, lng: -122.4194 } } }
+      ],
+      isMock: true
+    });
+  }
+
+  try {
+    const response = await axios.get(`https://maps.googleapis.com/maps/api/place/textsearch/json`, {
+      params: {
+        query: q,
+        key: API_KEY
+      }
+    });
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error with Google Places API:', error);
+    res.status(500).json({ error: 'Failed to fetch places' });
+  }
+});
+
+app.post('/api/chrome/screenshot', async (req, res) => {
+  const { url } = req.body;
+
+  if (!url) {
+    return res.status(400).json({ error: 'URL is required' });
+  }
+
+  // SSRF Protection: Validate URL
+  try {
+    const parsedUrl = new URL(url);
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      return res.status(400).json({ error: 'Invalid protocol. Only http and https are allowed.' });
+    }
+
+    // Prevent access to localhost and private IPs
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const privateIpPatterns = [
+      /^localhost$/,
+      /^127\./,
+      /^10\./,
+      /^172\.(1[6-9]|2[0-9]|3[01])\./,
+      /^192\.168\./,
+      /^169\.254\./,
+      /^::1$/,
+      /^fc00:/,
+      /^fe80:/
+    ];
+
+    if (privateIpPatterns.some(pattern => pattern.test(hostname))) {
+      // In a real app, you might also want to resolve the hostname to IP to check
+      return res.status(403).json({ error: 'Access to internal/private networks is restricted.' });
+    }
+  } catch (e) {
+    return res.status(400).json({ error: 'Invalid URL format.' });
+  }
+
+  let page = null;
+  try {
+    const browser = await getBrowser();
+    page = await browser.newPage();
+
+    // Set a strict timeout to prevent resource exhaustion
+    await page.setDefaultNavigationTimeout(30000); // 30 seconds
+
+    await page.setViewport({ width: 1280, height: 800 });
+
+    // Navigate with a timeout and networkidle2 for stability
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+
+    const screenshot = await page.screenshot({
+      encoding: 'base64',
+      type: 'jpeg', // JPEG is usually smaller than PNG
+      quality: 80
+    });
+
+    res.json({ screenshot: `data:image/jpeg;base64,${screenshot}` });
+  } catch (error) {
+    console.error('Error taking screenshot with Puppeteer:', error);
+    res.status(500).json({ error: 'Failed to take screenshot', details: error.message });
+  } finally {
+    if (page) {
+      await page.close().catch(console.error);
+    }
   }
 });
 
