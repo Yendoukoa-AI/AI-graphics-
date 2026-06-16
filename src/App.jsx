@@ -52,6 +52,9 @@ function App() {
   const [screenshotResult, setScreenshotResult] = useState(null);
   const [provider, setProvider] = useState('google');
   const [useRAG, setUseRAG] = useState(false);
+  const [mlTask, setMlTask] = useState('summarization');
+  const [mlResult, setMlResult] = useState('');
+  const [isProcessingMl, setIsProcessingMl] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -269,8 +272,37 @@ function App() {
     }
   };
 
+  const handleMlTask = async () => {
+    if (!prompt) return;
+    setIsProcessingMl(true);
+    setMlResult('');
+    try {
+      const response = await fetch(`${API_URL}/api/ml/tools`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ task: mlTask, inputs: prompt }),
+      });
+      const data = await response.json();
+      setMlResult(data.result);
+    } catch (error) {
+      console.error('Error with ML task:', error);
+      setMlResult('Failed to perform ML task.');
+    } finally {
+      setIsProcessingMl(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!prompt) return;
+
+    if (mode === 'ml-tools') {
+      handleMlTask();
+      return;
+    }
+
     setIsGenerating(true);
     setPreviewImage(null);
     setPreviewVideo(null);
@@ -638,6 +670,21 @@ function App() {
           <h3>Maps AI</h3>
           <p>Integrate interactive maps, geolocation features, and geographic data visualization into your designs.</p>
         </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">🤖</span>
+            <h3>AI Projects</h3>
+            <p>Conceptualize and design complex AI systems, neural network architectures, and data pipelines.</p>
+          </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">🔗</span>
+            <h3>Web3 AI</h3>
+            <p>Design decentralized applications, smart contracts, and NFT ecosystems with blockchain-focused AI.</p>
+          </div>
+          <div className="card enhancement-card">
+            <span className="card-icon">📊</span>
+            <h3>ML Tools AI</h3>
+            <p>Access global ML tools for text analysis, summarization, and translation directly in your workflow.</p>
+          </div>
         </div>
       </section>
 
@@ -807,6 +854,18 @@ function App() {
             <img src="https://loremflickr.com/400/300/map,geography" alt="Maps AI" />
             <div className="showcase-info">Maps AI</div>
           </div>
+          <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/artificial,intelligence,circuit" alt="AI Projects" />
+            <div className="showcase-info">AI Projects</div>
+          </div>
+          <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/blockchain,crypto" alt="Web3" />
+            <div className="showcase-info">Web3 AI</div>
+          </div>
+          <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/data,analysis,chart" alt="ML Tools" />
+            <div className="showcase-info">ML Tools</div>
+          </div>
         </div>
       </section>
 
@@ -841,6 +900,20 @@ function App() {
                   style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
                 >
                   OpenRouter
+                </button>
+                <button
+                  className={`mode-btn ${provider === 'openai' ? 'active' : ''}`}
+                  onClick={() => setProvider('openai')}
+                  style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+                >
+                  OpenAI (DALL-E)
+                </button>
+                <button
+                  className={`mode-btn ${provider === 'huggingface' ? 'active' : ''}`}
+                  onClick={() => setProvider('huggingface')}
+                  style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+                >
+                  Hugging Face
                 </button>
               </div>
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -1009,6 +1082,24 @@ function App() {
                   Maps AI
                 </button>
                 <button
+                  className={`mode-btn enhancement ${mode === 'ai-projects' ? 'active' : ''}`}
+                  onClick={() => setMode('ai-projects')}
+                >
+                  AI Projects
+                </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'web3' ? 'active' : ''}`}
+                  onClick={() => setMode('web3')}
+                >
+                  Web3
+                </button>
+                <button
+                  className={`mode-btn enhancement ${mode === 'ml-tools' ? 'active' : ''}`}
+                  onClick={() => setMode('ml-tools')}
+                >
+                  ML Tools
+                </button>
+                <button
                   className={`mode-btn enhancement ${mode === 'github' ? 'active' : ''}`}
                   onClick={() => setMode('github')}
                 >
@@ -1040,6 +1131,32 @@ function App() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {mode === 'ml-tools' && (
+            <div className="ml-tools-selector" style={{ marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <h4 style={{ marginBottom: '1rem' }}>Select AI/ML Task</h4>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  className={`mode-btn ${mlTask === 'summarization' ? 'active' : ''}`}
+                  onClick={() => setMlTask('summarization')}
+                >
+                  Summarization
+                </button>
+                <button
+                  className={`mode-btn ${mlTask === 'sentiment-analysis' ? 'active' : ''}`}
+                  onClick={() => setMlTask('sentiment-analysis')}
+                >
+                  Sentiment Analysis
+                </button>
+                <button
+                  className={`mode-btn ${mlTask === 'translation' ? 'active' : ''}`}
+                  onClick={() => setMlTask('translation')}
+                >
+                  Translation
+                </button>
+              </div>
             </div>
           )}
 
@@ -1114,6 +1231,9 @@ function App() {
                 mode === 'art-ai' ? "e.g., Oil painting of a sunset over mountains or abstract digital art" :
                 mode === 'education' ? "e.g., Interactive math lesson for kids or global history curriculum layout" :
                 mode === 'github' ? "e.g., Personal portfolio for GitHub Pages or documentation site" :
+                mode === 'ai-projects' ? "e.g., Architecture for a real-time recommendation engine" :
+                mode === 'web3' ? "e.g., Smart contract for a decentralized voting system" :
+                mode === 'ml-tools' ? `e.g., Enter text to ${mlTask === 'summarization' ? 'summarize' : mlTask === 'sentiment-analysis' ? 'analyze sentiment' : 'translate'}` :
                 "e.g., Describe your creative vision..."
               }
                 value={prompt}
@@ -1131,9 +1251,9 @@ function App() {
             <button
               className="cta-button"
               onClick={handleGenerate}
-              disabled={isGenerating}
+              disabled={isGenerating || isProcessingMl}
             >
-              {isGenerating ? 'Generating...' : 'Generate Design'}
+              {mode === 'ml-tools' ? (isProcessingMl ? 'Processing...' : 'Process Task') : (isGenerating ? 'Generating...' : 'Generate Design')}
             </button>
           </div>
 
@@ -1155,14 +1275,22 @@ function App() {
           )}
 
           <div className="preview-area">
-            {isGenerating && (
+            {(isGenerating || isProcessingMl) && (
               <div className="loading-overlay">
                 <div className="spinner"></div>
-                <p>AI is thinking...</p>
+                <p>{isProcessingMl ? 'ML analysis in progress...' : 'AI is thinking...'}</p>
               </div>
             )}
-            {previewImage || previewVideo || langflowResponse ? (
+            {previewImage || previewVideo || langflowResponse || mlResult ? (
               <div className="preview-container">
+                {mlResult && (
+                  <div className="ml-response-box" style={{ background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '1.5rem' }}>
+                    <h4 style={{ color: '#60a5fa', marginBottom: '1rem' }}>AI/ML Tool Output - {mlTask.replace('-', ' ').toUpperCase()}</h4>
+                    <div className="ml-content" style={{ color: '#e2e8f0', lineHeight: '1.6', fontSize: '1.1rem' }}>
+                      {mlResult}
+                    </div>
+                  </div>
+                )}
                 {langflowResponse && (
                   <div className="langflow-response-box">
                     <h4>LangFlow Output</h4>

@@ -13,6 +13,7 @@
   "type": "commonjs",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@huggingface/inference": "^4.13.19",
     "@langchain/anthropic": "^1.4.1",
     "@langchain/google-genai": "^2.1.31",
     "@langchain/openai": "^1.4.7",

@@ -9,6 +9,8 @@ const session = require('express-session');
 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
 const { ChatAnthropic } = require('@langchain/anthropic');
 const { ChatOpenAI } = require('@langchain/openai');
+const OpenAI = require('openai');
+const { HfInference } = require('@huggingface/inference');
 const { HumanMessage, SystemMessage } = require('@langchain/core/messages');
 const { createClient } = require('@supabase/supabase-js');
 const { Octokit } = require('octokit');
@@ -162,6 +164,14 @@ const openRouterModel = new ChatOpenAI({
   }
 });
 
+// Initialize Hugging Face Inference
+const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+
+// Initialize OpenAI client for DALL-E and other direct API calls
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || 'dummy_key',
+});
+
 // Initialize Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
@@ -174,30 +184,62 @@ app.post('/api/generate', async (req, res) => {
     return res.status(400).json({ error: 'Prompt and mode are required' });
   }
 
-  const keywords = product ? `${product.title},${prompt}` : `${mode},${prompt}`;
-  // Ensure keywords are comma-separated for loremflickr, but don't encode the commas
-  const tagString = keywords.replace(/\s+/g, ',').split(',').map(tag => encodeURIComponent(tag)).join(',');
-  let imageUrl = `https://loremflickr.com/800/600/${tagString}`;
+  let imageUrl = null;
   let videoUrl = (mode === 'video' || mode === 'cinema') ? 'https://www.w3schools.com/html/mov_bbb.mp4' : null;
 
-  if (videoUrl) {
-    imageUrl = null;
-  }
-
   try {
+    // 1. Generate Image if not a video mode
+    if (!videoUrl) {
+      if (provider === 'openai' && process.env.OPENAI_API_KEY) {
+        try {
+          const response = await openai.images.generate({
+            model: "dall-e-3",
+            prompt: `Professional high-quality design for: ${mode}, ${prompt}`,
+            n: 1,
+            size: "1024x1024",
+          });
+          imageUrl = response.data[0].url;
+        } catch (e) {
+          console.error('DALL-E generation failed, falling back to loremflickr:', e.message);
+        }
+      } else if (provider === 'huggingface' && process.env.HUGGINGFACE_API_KEY) {
+        try {
+          const response = await hf.textToImage({
+            model: 'stabilityai/stable-diffusion-xl-base-1.0',
+            inputs: `${mode} design: ${prompt}`,
+          });
+          // Convert Blob to Base64 for easier transport
+          const buffer = Buffer.from(await response.arrayBuffer());
+          imageUrl = `data:image/png;base64,${buffer.toString('base64')}`;
+        } catch (e) {
+          console.error('Hugging Face image generation failed, falling back to loremflickr:', e.message);
+        }
+      }
+
+      // Fallback to loremflickr if no AI image was generated
+      if (!imageUrl) {
+        const keywords = product ? `${product.title},${prompt}` : `${mode},${prompt}`;
+        const tagString = keywords.replace(/\s+/g, ',').split(',').map(tag => encodeURIComponent(tag)).join(',');
+        imageUrl = `https://loremflickr.com/800/600/${tagString}`;
+      }
+    }
+
     let insight = '';
 
     // Attempt to use LangChain for insight if API key is provided
     const hasGoogleKey = process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here';
     const hasClaudeKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'your_anthropic_api_key_here';
     const hasOpenRouterKey = process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY !== 'your_openrouter_api_key_here';
+    const hasOpenAIKey = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'dummy_key';
 
-    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'openrouter' && hasOpenRouterKey)) {
+    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'openrouter' && hasOpenRouterKey) || (provider === 'openai' && hasOpenAIKey)) {
       let chatModel;
       if (provider === 'claude') {
         chatModel = claudeModel;
       } else if (provider === 'openrouter') {
         chatModel = openRouterModel;
+      } else if (provider === 'openai') {
+        chatModel = new ChatOpenAI({ openAIApiKey: process.env.OPENAI_API_KEY });
       } else {
         chatModel = googleModel;
       }
@@ -273,6 +315,15 @@ app.post('/api/generate', async (req, res) => {
       } else if (mode === 'maps') {
         systemPrompt = "You are a geographic design and cartography expert.";
         humanPrompt = `Provide a short, professional insight (2 sentences) for this map-related design request: "${prompt}"`;
+      } else if (mode === 'ai-projects') {
+        systemPrompt = "You are an AI projects and systems development expert.";
+        humanPrompt = `Provide a short, strategic technical insight (2 sentences) for this AI project request: "${prompt}"`;
+      } else if (mode === 'web3') {
+        systemPrompt = "You are a Web3 and blockchain development expert.";
+        humanPrompt = `Provide a short, professional insight (2 sentences) for this decentralized application or Web3 request: "${prompt}"`;
+      } else if (mode === 'ml-tools') {
+        systemPrompt = "You are a machine learning and data science tools expert.";
+        humanPrompt = `Provide a short, professional insight (2 sentences) for this ML tool or data task: "${prompt}"`;
       }
 
       // Simulated RAG Logic
@@ -726,6 +777,48 @@ app.post('/api/facebook/post', async (req, res) => {
   } catch (error) {
     console.error('Error posting to Facebook:', error.response?.data || error.message);
     res.status(500).json({ error: 'Failed to post to Facebook', details: error.response?.data });
+  }
+});
+
+app.post('/api/ml/tools', async (req, res) => {
+  const { task, inputs } = req.body;
+  const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
+
+  if (!HUGGINGFACE_API_KEY) {
+    return res.json({
+      result: `Hugging Face is not configured. (Mock) Task: ${task}, Input: ${inputs}`,
+      isMock: true
+    });
+  }
+
+  try {
+    let result;
+    if (task === 'summarization') {
+      const response = await hf.summarization({
+        model: 'facebook/bart-large-cnn',
+        inputs: inputs,
+      });
+      result = response.summary_text;
+    } else if (task === 'sentiment-analysis') {
+      const response = await hf.textClassification({
+        model: 'distilbert-base-uncased-finetuned-sst-2-english',
+        inputs: inputs,
+      });
+      result = `Sentiment: ${response[0].label} (Score: ${response[0].score.toFixed(2)})`;
+    } else if (task === 'translation') {
+      const response = await hf.translation({
+        model: 't5-base',
+        inputs: inputs,
+      });
+      result = response.translation_text;
+    } else {
+      return res.status(400).json({ error: 'Unsupported task' });
+    }
+
+    res.json({ result });
+  } catch (error) {
+    console.error('Error with Hugging Face ML tools:', error);
+    res.status(500).json({ error: 'Failed to perform ML task' });
   }
 });
 
