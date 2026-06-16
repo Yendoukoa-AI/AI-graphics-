@@ -32,6 +32,12 @@ function App() {
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
   const [langflowResponse, setLangflowResponse] = useState('');
   const [user, setUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [authError, setAuthError] = useState('');
   const [niche, setNiche] = useState('');
   const [dropshipperSuggestions, setDropshipperSuggestions] = useState([]);
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
@@ -96,9 +102,41 @@ function App() {
       const data = await response.json();
       if (data && data.id) {
         setUser(data);
+      } else {
+        setUser(null);
       }
     } catch (error) {
       console.error('Error fetching user:', error);
+    }
+  };
+
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    const endpoint = authMode === 'login' ? '/auth/login' : '/auth/register';
+    const payload = authMode === 'login'
+      ? { email, password }
+      : { email, password, displayName };
+
+    try {
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUser(data);
+        setShowAuthModal(false);
+        setEmail('');
+        setPassword('');
+        setDisplayName('');
+      } else {
+        setAuthError(data.error || 'Authentication failed');
+      }
+    } catch (error) {
+      setAuthError('An error occurred during authentication');
     }
   };
 
@@ -556,6 +594,66 @@ function App() {
 
   return (
     <div className="App">
+      {showAuthModal && (
+        <div className="modal-overlay">
+          <div className="auth-modal">
+            <button className="close-modal" onClick={() => setShowAuthModal(false)}>✕</button>
+            <h3>{authMode === 'login' ? 'Login to DesignAI' : 'Create Account'}</h3>
+            {authError && <p className="auth-error-msg">{authError}</p>}
+            <form onSubmit={handleAuth}>
+              {authMode === 'register' && (
+                <div className="input-field-group">
+                  <label>Display Name</label>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+              )}
+              <div className="input-field-group">
+                <label>Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  required
+                />
+              </div>
+              <div className="input-field-group">
+                <label>Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              <button type="submit" className="cta-button auth-submit">
+                {authMode === 'login' ? 'Login' : 'Register'}
+              </button>
+            </form>
+            <div className="auth-switch">
+              {authMode === 'login' ? (
+                <p>Don't have an account? <button onClick={() => setAuthMode('register')}>Register</button></p>
+              ) : (
+                <p>Already have an account? <button onClick={() => setAuthMode('login')}>Login</button></p>
+              )}
+            </div>
+            <div className="auth-divider">
+              <span>OR</span>
+            </div>
+            <div className="social-auth-options">
+              <a href={`${API_URL}/auth/google`} className="social-auth-btn google">Continue with Google</a>
+              <a href={`${API_URL}/auth/facebook`} className="social-auth-btn facebook">Continue with Facebook</a>
+            </div>
+          </div>
+        </div>
+      )}
       <nav className="navbar">
         <div className="logo">DesignAI Studio</div>
         <div className="nav-links">
@@ -569,7 +667,7 @@ function App() {
           <button className="sponsor-button">Sponsor</button>
           {user ? (
             <div className="user-profile">
-              <img src={user.photos[0].value} alt={user.displayName} className="user-avatar" />
+              <img src={user.photos?.[0]?.value || `https://ui-avatars.com/api/?name=${user.displayName}`} alt={user.displayName} className="user-avatar" />
               <div className="user-dropdown">
                 <span>{user.displayName}</span>
                 <a href={`${API_URL}/auth/logout`} className="logout-link">Logout</a>
@@ -577,8 +675,14 @@ function App() {
             </div>
           ) : (
             <div className="auth-buttons">
-              <a href={`${API_URL}/auth/google`} className="cta-button login-btn google">Login with Google</a>
-              <a href={`${API_URL}/auth/facebook`} className="cta-button login-btn facebook">Login with Facebook</a>
+              <button
+                className="cta-button login-btn email"
+                onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
+              >
+                Login / Register
+              </button>
+              <a href={`${API_URL}/auth/google`} className="cta-button login-btn google">Google</a>
+              <a href={`${API_URL}/auth/facebook`} className="cta-button login-btn facebook">Facebook</a>
             </div>
           )}
         </div>

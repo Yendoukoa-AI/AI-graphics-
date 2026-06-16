@@ -19,6 +19,7 @@
     "@langchain/openai": "^1.4.7",
     "@supabase/supabase-js": "^2.108.2",
     "axios": "^1.18.0",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -32,6 +33,7 @@
     "passport": "^0.7.0",
     "passport-facebook": "^3.0.0",
     "passport-google-oauth20": "^2.0.0",
+    "passport-local": "^1.0.0",
     "puppeteer": "^25.1.0"
   }
 }

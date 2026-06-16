@@ -5,6 +5,8 @@ const axios = require('axios');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
 const { ChatAnthropic } = require('@langchain/anthropic');
@@ -54,6 +56,31 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Mock user database
+const users = [];
+
+// Passport Local Strategy
+passport.use(new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password'
+  },
+  async (email, password, done) => {
+    try {
+      const user = users.find(u => u.email === email);
+      if (!user) {
+        return done(null, false, { message: 'Incorrect email.' });
+      }
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
+  }
+));
+
 // Passport Google Strategy
 const isGoogleConfigured = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
 const isFacebookConfigured = !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET);
@@ -92,6 +119,7 @@ passport.serializeUser((user, done) => {
   // Store only the essential info in the session
   done(null, {
     id: user.id,
+    email: user.email,
     displayName: user.displayName,
     photos: user.photos,
     emails: user.emails,
@@ -391,6 +419,48 @@ app.post('/api/generate', async (req, res) => {
 });
 
 // Auth Routes
+app.post('/auth/register', async (req, res) => {
+  const { email, password, displayName } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  const existingUser = users.find(u => u.email === email);
+  if (existingUser) {
+    return res.status(400).json({ error: 'User already exists' });
+  }
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = {
+      id: Date.now().toString(),
+      email,
+      password: hashedPassword,
+      displayName: displayName || email.split('@')[0],
+      photos: [{ value: `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || email)}` }]
+    };
+    users.push(newUser);
+
+    req.login(newUser, (err) => {
+      if (err) return res.status(500).json({ error: 'Login failed after registration' });
+      res.json(newUser);
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+app.post('/auth/login', (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) return next(err);
+    if (!user) return res.status(401).json({ error: info.message || 'Login failed' });
+    req.login(user, (err) => {
+      if (err) return next(err);
+      return res.json(user);
+    });
+  })(req, res, next);
+});
+
 app.get('/auth/google', (req, res, next) => {
   if (!isGoogleConfigured) {
     return res.status(501).json({ error: 'Google OAuth not configured' });
