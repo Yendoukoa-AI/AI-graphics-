@@ -50,6 +50,7 @@ function App() {
   const [mapCenter, setMapCenter] = useState([37.7749, -122.4194]); // Default to SF
   const [isTakingScreenshot, setIsTakingScreenshot] = useState(false);
   const [screenshotResult, setScreenshotResult] = useState(null);
+  const [provider, setProvider] = useState('google');
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -120,7 +121,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ niche }),
+        body: JSON.stringify({ niche, provider }),
       });
       const data = await response.json();
       setDropshipperSuggestions(data.suggestions || []);
@@ -282,83 +283,87 @@ function App() {
       timestamp: new Date().toLocaleTimeString(),
     };
 
-    if (mode === 'maps') {
-      await handleGooglePlaces();
-    }
+    try {
+      if (mode === 'maps') {
+        await handleGooglePlaces();
+        return;
+      }
 
-    if (mode === 'langflow') {
+      if (mode === 'langflow') {
+        try {
+          const response = await fetch(`${API_URL}/api/langflow`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ prompt }),
+          });
+          const data = await response.json();
+          setLangflowResponse(data.result);
+          result.langflowResponse = data.result;
+          setHistory([result, ...history]);
+        } catch (error) {
+          console.error('Error with LangFlow:', error);
+          setLangflowResponse('Failed to get response from LangFlow.');
+        }
+        return;
+      }
+
       try {
-        const response = await fetch(`${API_URL}/api/langflow`, {
+        const response = await fetch(`${API_URL}/api/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           credentials: 'include',
-          body: JSON.stringify({ prompt }),
+          body: JSON.stringify({
+            prompt,
+            mode,
+            provider,
+            product: mode === 'shopline' ? selectedProduct : null
+          }),
         });
+
+        if (mode === 'github') {
+          await fetchCopilotSuggestion();
+        }
+
         const data = await response.json();
-        setLangflowResponse(data.result);
-        result.langflowResponse = data.result;
+        if (data.imageUrl) {
+          setPreviewImage(data.imageUrl);
+          result.imageUrl = data.imageUrl;
+        }
+        if (data.videoUrl) {
+          setPreviewVideo(data.videoUrl);
+          result.videoUrl = data.videoUrl;
+        }
+        if (data.insight) {
+          setAiInsight(data.insight);
+          result.insight = data.insight;
+        }
         setHistory([result, ...history]);
       } catch (error) {
-        console.error('Error with LangFlow:', error);
-        setLangflowResponse('Failed to get response from LangFlow.');
-      } finally {
-        setIsGenerating(false);
+        console.error('Error generating design:', error);
+        // Fallback for demo if backend is not running
+        const keywords = `${mode},${prompt}`.replace(/\s+/g, ',');
+        let fallbackImg = null;
+        let fallbackVid = null;
+        if (mode === 'video' || mode === 'cinema') {
+          fallbackVid = 'https://www.w3schools.com/html/mov_bbb.mp4';
+          setPreviewVideo(fallbackVid);
+          result.videoUrl = fallbackVid;
+        } else {
+          fallbackImg = `https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`;
+          setPreviewImage(fallbackImg);
+          result.imageUrl = fallbackImg;
+        }
+        result.insight = "Design insight: Focus on balance and typography for your project.";
+        setAiInsight(result.insight);
+        setHistory([result, ...history]);
       }
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/api/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          prompt,
-          mode,
-          product: mode === 'shopline' ? selectedProduct : null
-        }),
-      });
-
-      if (mode === 'github') {
-        await fetchCopilotSuggestion();
-      }
-
-      const data = await response.json();
-      if (data.imageUrl) {
-        setPreviewImage(data.imageUrl);
-        result.imageUrl = data.imageUrl;
-      }
-      if (data.videoUrl) {
-        setPreviewVideo(data.videoUrl);
-        result.videoUrl = data.videoUrl;
-      }
-      if (data.insight) {
-        setAiInsight(data.insight);
-        result.insight = data.insight;
-      }
-      setHistory([result, ...history]);
-    } catch (error) {
-      console.error('Error generating design:', error);
-      // Fallback for demo if backend is not running
-      const keywords = `${mode},${prompt}`.replace(/\s+/g, ',');
-      let fallbackImg = null;
-      let fallbackVid = null;
-      if (mode === 'video' || mode === 'cinema') {
-        fallbackVid = 'https://www.w3schools.com/html/mov_bbb.mp4';
-        setPreviewVideo(fallbackVid);
-        result.videoUrl = fallbackVid;
-      } else {
-        fallbackImg = `https://loremflickr.com/800/600/${encodeURIComponent(keywords)}`;
-        setPreviewImage(fallbackImg);
-        result.imageUrl = fallbackImg;
-      }
-      result.insight = "Design insight: Focus on balance and typography for your project.";
-      setAiInsight(result.insight);
-      setHistory([result, ...history]);
+    } catch (err) {
+      console.error('Critical error in handleGenerate:', err);
     } finally {
       setIsGenerating(false);
     }
@@ -376,7 +381,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ prompt, mode }),
+        body: JSON.stringify({ prompt, mode, provider }),
       });
       const data = await response.json();
       if (data.success) {
@@ -406,7 +411,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ prompt, mode }),
+        body: JSON.stringify({ prompt, mode, provider }),
       });
       const data = await response.json();
       setCopilotSuggestion(data.suggestion);
@@ -811,6 +816,26 @@ function App() {
 
         <div className="ai-editor">
           <div className="mode-selector-container">
+            <div className="provider-selector" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#94a3b8' }}>AI Provider:</span>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  className={`mode-btn ${provider === 'google' ? 'active' : ''}`}
+                  onClick={() => setProvider('google')}
+                  style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+                >
+                  Google Gemini
+                </button>
+                <button
+                  className={`mode-btn ${provider === 'claude' ? 'active' : ''}`}
+                  onClick={() => setProvider('claude')}
+                  style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+                >
+                  Anthropic Claude
+                </button>
+              </div>
+            </div>
+
             <div className="mode-group">
               <span className="group-label">Core Design</span>
               <div className="mode-selector">
