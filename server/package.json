@@ -30,6 +30,7 @@
     "passport": "^0.7.0",
     "passport-facebook": "^3.0.0",
     "passport-google-oauth20": "^2.0.0",
-    "puppeteer": "^25.1.0"
+    "puppeteer": "^25.1.0",
+    "stripe": "^16.0.0"
   }
 }
