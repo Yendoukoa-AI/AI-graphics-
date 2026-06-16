@@ -13,10 +13,10 @@ const OpenAI = require('openai');
 const { HfInference } = require('@huggingface/inference');
 const { HumanMessage, SystemMessage } = require('@langchain/core/messages');
 const { createClient } = require('@supabase/supabase-js');
-const { Octokit } = require('octokit');
+require('dotenv').config();
 const { google } = require('googleapis');
 const puppeteer = require('puppeteer');
-require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -777,6 +777,58 @@ app.post('/api/facebook/post', async (req, res) => {
   } catch (error) {
     console.error('Error posting to Facebook:', error.response?.data || error.message);
     res.status(500).json({ error: 'Failed to post to Facebook', details: error.response?.data });
+  }
+});
+
+app.post('/api/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_secret');
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      const session = event.data.object;
+      console.log('Checkout session completed:', session.id);
+      // In a real app, update user subscription status in DB here
+      break;
+    case 'invoice.payment_succeeded':
+      const invoice = event.data.object;
+      console.log('Invoice payment succeeded:', invoice.id);
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({ received: true });
+});
+
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { priceId } = req.body;
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price: priceId || 'price_1PjKqxL1q5L1q5L1q5L1q5L1', // Default mock price ID
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/?success=true`,
+      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/?canceled=true`,
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Error creating checkout session:', error);
+    res.status(500).json({ error: 'Failed to create checkout session' });
   }
 });
 

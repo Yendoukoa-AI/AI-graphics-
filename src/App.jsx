@@ -55,6 +55,7 @@ function App() {
   const [mlTask, setMlTask] = useState('summarization');
   const [mlResult, setMlResult] = useState('');
   const [isProcessingMl, setIsProcessingMl] = useState(false);
+  const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -269,6 +270,31 @@ function App() {
       alert('Error posting to Facebook. Make sure you are logged in with Facebook.');
     } finally {
       setIsPostingToFacebook(false);
+    }
+  };
+
+  const handleCheckout = async (priceId) => {
+    setIsCreatingCheckout(true);
+    try {
+      const response = await fetch(`${API_URL}/api/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ priceId }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Failed to create checkout session.');
+      }
+    } catch (error) {
+      console.error('Error with checkout:', error);
+      alert('Checkout error. Please try again.');
+    } finally {
+      setIsCreatingCheckout(false);
     }
   };
 
@@ -699,7 +725,7 @@ function App() {
               <li>Basic Web Design templates</li>
               <li>Standard Image Quality</li>
             </ul>
-            <button className="pricing-btn">Start for Free</button>
+            <button className="pricing-btn" onClick={() => alert('You are already on the Free plan!')}>Current Plan</button>
           </div>
           <div className="pricing-card popular">
             <div className="badge">Most Popular</div>
@@ -711,7 +737,13 @@ function App() {
               <li>HD Export Options</li>
               <li>Priority Support</li>
             </ul>
-            <button className="pricing-btn primary">Upgrade to Pro</button>
+            <button
+              className="pricing-btn primary"
+              onClick={() => handleCheckout('price_pro_monthly')}
+              disabled={isCreatingCheckout}
+            >
+              {isCreatingCheckout ? 'Redirecting...' : 'Upgrade to Pro'}
+            </button>
           </div>
           <div className="pricing-card">
             <h3>Enterprise</h3>
@@ -722,7 +754,13 @@ function App() {
               <li>Team Collaboration</li>
               <li>Dedicated Manager</li>
             </ul>
-            <button className="pricing-btn">Contact Sales</button>
+            <button
+              className="pricing-btn"
+              onClick={() => handleCheckout('price_enterprise_custom')}
+              disabled={isCreatingCheckout}
+            >
+              {isCreatingCheckout ? 'Redirecting...' : 'Contact Sales'}
+            </button>
           </div>
         </div>
       </section>
