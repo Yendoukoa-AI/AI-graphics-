@@ -55,6 +55,10 @@ function App() {
   const [mlTask, setMlTask] = useState('summarization');
   const [mlResult, setMlResult] = useState('');
   const [isProcessingMl, setIsProcessingMl] = useState(false);
+  const [fineTuningJobs, setFineTuningJobs] = useState([]);
+  const [fineTunedModelsList, setFineTunedModelsList] = useState([]);
+  const [selectedFineTunedModel, setSelectedFineTunedModel] = useState(null);
+  const [isFinetuningLoading, setIsFinetuningLoading] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -295,6 +299,75 @@ function App() {
     }
   };
 
+  const fetchFineTuningData = async () => {
+    setIsFinetuningLoading(true);
+    try {
+      const [jobsRes, modelsRes] = await Promise.all([
+        fetch(`${API_URL}/api/finetuning/jobs`, { credentials: 'include' }),
+        fetch(`${API_URL}/api/finetuning/models`, { credentials: 'include' })
+      ]);
+      const jobsData = await jobsRes.json();
+      const modelsData = await modelsRes.json();
+      setFineTuningJobs(jobsData.data || []);
+      setFineTunedModelsList(modelsData.data || []);
+    } catch (error) {
+      console.error('Error fetching fine-tuning data:', error);
+    } finally {
+      setIsFinetuningLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setIsFinetuningLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/finetuning/upload`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data.id) {
+        alert(`File uploaded successfully: ${data.id}`);
+        // Automatically start a job for demo
+        startFineTuningJob(data.id);
+      } else {
+        alert('Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Error uploading file');
+    } finally {
+      setIsFinetuningLoading(false);
+    }
+  };
+
+  const startFineTuningJob = async (fileId) => {
+    setIsFinetuningLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/finetuning/jobs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ training_file: fileId }),
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data.id) {
+        alert(`Fine-tuning job started: ${data.id}`);
+        fetchFineTuningData();
+      }
+    } catch (error) {
+      console.error('Error starting job:', error);
+    } finally {
+      setIsFinetuningLoading(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!prompt) return;
 
@@ -355,6 +428,7 @@ function App() {
             mode,
             provider,
             useRAG,
+              fineTunedModel: selectedFineTunedModel,
             product: mode === 'shopline' ? selectedProduct : null
           }),
         });
@@ -1100,6 +1174,15 @@ function App() {
                   ML Tools
                 </button>
                 <button
+                  className={`mode-btn enhancement ${mode === 'finetuning' ? 'active' : ''}`}
+                  onClick={() => {
+                    setMode('finetuning');
+                    fetchFineTuningData();
+                  }}
+                >
+                  Fine Tuning
+                </button>
+                <button
                   className={`mode-btn enhancement ${mode === 'github' ? 'active' : ''}`}
                   onClick={() => setMode('github')}
                 >
@@ -1131,6 +1214,95 @@ function App() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {mode === 'finetuning' && (
+            <div className="finetuning-manager" style={{ marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: 0 }}>AI Fine-Tuning Manager</h3>
+                <button className="secondary-button" onClick={fetchFineTuningData} disabled={isFinetuningLoading}>
+                  {isFinetuningLoading ? 'Refreshing...' : 'Refresh Data'}
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                <div>
+                  <h4 style={{ color: '#60a5fa', marginBottom: '1rem' }}>Upload Training Data (.jsonl)</h4>
+                  <input
+                    type="file"
+                    accept=".jsonl"
+                    onChange={handleFileUpload}
+                    style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '0.5rem', width: '100%', border: '1px dashed rgba(255,255,255,0.2)' }}
+                  />
+                  <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.5rem' }}>
+                    Upload a JSONL file with messages following OpenAI's chat format to train your custom model.
+                  </p>
+
+                  <h4 style={{ color: '#60a5fa', marginTop: '2rem', marginBottom: '1rem' }}>Active Jobs</h4>
+                  <div style={{ maxHeight: '200px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '0.5rem', padding: '0.5rem' }}>
+                    {fineTuningJobs.length > 0 ? (
+                      fineTuningJobs.map(job => (
+                        <div key={job.id} style={{ padding: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '0.85rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span style={{ fontWeight: 'bold' }}>{job.id}</span>
+                            <span style={{
+                              color: job.status === 'succeeded' ? '#10b981' : job.status === 'failed' ? '#ef4444' : '#f59e0b',
+                              textTransform: 'capitalize'
+                            }}>{job.status}</span>
+                          </div>
+                          <div style={{ color: '#94a3b8', marginTop: '0.2rem' }}>Model: {job.model}</div>
+                          {job.fine_tuned_model && (
+                            <div style={{ color: '#60a5fa', fontSize: '0.75rem', marginTop: '0.2rem', wordBreak: 'break-all' }}>Result: {job.fine_tuned_model}</div>
+                          )}
+                        </div>
+                      ))
+                    ) : <p style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>No jobs found</p>}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 style={{ color: '#60a5fa', marginBottom: '1rem' }}>Select Custom Model</h4>
+                  <div style={{ maxHeight: '400px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '0.5rem' }}>
+                    <div
+                      className={`model-item ${!selectedFineTunedModel ? 'selected' : ''}`}
+                      style={{
+                        padding: '1rem',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        background: !selectedFineTunedModel ? 'rgba(96, 165, 250, 0.1)' : 'transparent'
+                      }}
+                      onClick={() => setSelectedFineTunedModel(null)}
+                    >
+                      <div style={{ fontWeight: 'bold' }}>Default (GPT-3.5 Turbo)</div>
+                      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Standard OpenAI model</div>
+                    </div>
+                    {fineTunedModelsList.map(model => (
+                      <div
+                        key={model.id}
+                        className={`model-item ${selectedFineTunedModel === model.id ? 'selected' : ''}`}
+                        style={{
+                          padding: '1rem',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid rgba(255,255,255,0.05)',
+                          background: selectedFineTunedModel === model.id ? 'rgba(96, 165, 250, 0.1)' : 'transparent'
+                        }}
+                        onClick={() => setSelectedFineTunedModel(model.id)}
+                      >
+                        <div style={{ fontWeight: 'bold', wordBreak: 'break-all' }}>{model.id}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Custom Fine-tuned Model</div>
+                      </div>
+                    ))}
+                  </div>
+                  {selectedFineTunedModel && (
+                    <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '0.5rem', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                      <p style={{ margin: 0, color: '#10b981', fontSize: '0.9rem' }}>
+                        <strong>Active:</strong> Using your custom model for generation.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

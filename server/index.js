@@ -16,6 +16,8 @@ const { createClient } = require('@supabase/supabase-js');
 const { Octokit } = require('octokit');
 const { google } = require('googleapis');
 const puppeteer = require('puppeteer');
+const multer = require('multer');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -172,13 +174,20 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'dummy_key',
 });
 
+// Configure Multer for file uploads
+const UPLOADS_DIR = 'uploads/';
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+const upload = multer({ dest: UPLOADS_DIR });
+
 // Initialize Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
 app.post('/api/generate', async (req, res) => {
-  const { prompt, mode, product, provider = 'google', useRAG = false } = req.body;
+  const { prompt, mode, product, provider = 'google', useRAG = false, fineTunedModel = null } = req.body;
 
   if (!prompt || !mode) {
     return res.status(400).json({ error: 'Prompt and mode are required' });
@@ -239,7 +248,10 @@ app.post('/api/generate', async (req, res) => {
       } else if (provider === 'openrouter') {
         chatModel = openRouterModel;
       } else if (provider === 'openai') {
-        chatModel = new ChatOpenAI({ openAIApiKey: process.env.OPENAI_API_KEY });
+        chatModel = new ChatOpenAI({
+          openAIApiKey: process.env.OPENAI_API_KEY,
+          modelName: fineTunedModel || 'gpt-3.5-turbo'
+        });
       } else {
         chatModel = googleModel;
       }
@@ -777,6 +789,140 @@ app.post('/api/facebook/post', async (req, res) => {
   } catch (error) {
     console.error('Error posting to Facebook:', error.response?.data || error.message);
     res.status(500).json({ error: 'Failed to post to Facebook', details: error.response?.data });
+  }
+});
+
+app.post('/api/finetuning/upload', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  const hasOpenAIKey = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'dummy_key';
+
+  if (!hasOpenAIKey) {
+    // Clean up uploaded file
+    fs.unlinkSync(req.file.path);
+    return res.json({
+      id: `file-mock-${Date.now()}`,
+      filename: req.file.originalname,
+      purpose: 'fine-tune',
+      isMock: true
+    });
+  }
+
+  try {
+    const file = await openai.files.create({
+      file: fs.createReadStream(req.file.path),
+      purpose: 'fine-tune',
+    });
+
+    // Clean up uploaded file
+    fs.unlinkSync(req.file.path);
+
+    res.json(file);
+  } catch (error) {
+    console.error('Error uploading file to OpenAI:', error);
+    if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+    res.status(500).json({ error: 'Failed to upload file to OpenAI', details: error.message });
+  }
+});
+
+app.post('/api/finetuning/jobs', async (req, res) => {
+  const { training_file, model = 'gpt-3.5-turbo-0125' } = req.body;
+
+  if (!training_file) {
+    return res.status(400).json({ error: 'training_file is required' });
+  }
+
+  const hasOpenAIKey = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'dummy_key';
+
+  if (!hasOpenAIKey) {
+    return res.json({
+      id: `ftjob-mock-${Date.now()}`,
+      training_file,
+      model,
+      status: 'validating',
+      isMock: true
+    });
+  }
+
+  try {
+    const fineTune = await openai.fineTuning.jobs.create({
+      training_file,
+      model,
+    });
+    res.json(fineTune);
+  } catch (error) {
+    console.error('Error creating fine-tuning job:', error);
+    res.status(500).json({ error: 'Failed to create fine-tuning job', details: error.message });
+  }
+});
+
+app.get('/api/finetuning/jobs', async (req, res) => {
+  const hasOpenAIKey = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'dummy_key';
+
+  if (!hasOpenAIKey) {
+    return res.json({
+      data: [
+        { id: 'ftjob-mock-1', model: 'gpt-3.5-turbo-0125', status: 'succeeded', fine_tuned_model: 'ft:gpt-3.5-turbo-0125:personal::mock1' },
+        { id: 'ftjob-mock-2', model: 'gpt-3.5-turbo-0125', status: 'running', fine_tuned_model: null }
+      ],
+      isMock: true
+    });
+  }
+
+  try {
+    const list = await openai.fineTuning.jobs.list({ limit: 10 });
+    res.json(list);
+  } catch (error) {
+    console.error('Error listing fine-tuning jobs:', error);
+    res.status(500).json({ error: 'Failed to list fine-tuning jobs', details: error.message });
+  }
+});
+
+app.get('/api/finetuning/jobs/:id', async (req, res) => {
+  const { id } = req.params;
+  const hasOpenAIKey = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'dummy_key';
+
+  if (!hasOpenAIKey || id.startsWith('ftjob-mock')) {
+    return res.json({
+      id,
+      model: 'gpt-3.5-turbo-0125',
+      status: 'succeeded',
+      fine_tuned_model: 'ft:gpt-3.5-turbo-0125:personal::mock1',
+      isMock: true
+    });
+  }
+
+  try {
+    const fineTune = await openai.fineTuning.jobs.retrieve(id);
+    res.json(fineTune);
+  } catch (error) {
+    console.error('Error retrieving fine-tuning job:', error);
+    res.status(500).json({ error: 'Failed to retrieve fine-tuning job', details: error.message });
+  }
+});
+
+app.get('/api/finetuning/models', async (req, res) => {
+  const hasOpenAIKey = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'dummy_key';
+
+  if (!hasOpenAIKey) {
+    return res.json({
+      data: [
+        { id: 'ft:gpt-3.5-turbo-0125:personal::mock1', created: Date.now() },
+        { id: 'ft:gpt-3.5-turbo-0125:personal::mock2', created: Date.now() - 86400000 }
+      ],
+      isMock: true
+    });
+  }
+
+  try {
+    const list = await openai.models.list();
+    const ftModels = list.data.filter(model => model.id.startsWith('ft:'));
+    res.json({ data: ftModels });
+  } catch (error) {
+    console.error('Error listing models:', error);
+    res.status(500).json({ error: 'Failed to list models', details: error.message });
   }
 });
 
