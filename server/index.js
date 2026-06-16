@@ -10,6 +10,7 @@ const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
 const { ChatAnthropic } = require('@langchain/anthropic');
 const { HumanMessage } = require('@langchain/core/messages');
 const { Octokit } = require('octokit');
+const { google } = require('googleapis');
 require('dotenv').config();
 
 const app = express();
@@ -48,6 +49,8 @@ if (isGoogleConfigured) {
     },
     (accessToken, refreshToken, profile, done) => {
       // In a real app, you would find or create a user in your database here
+      profile.accessToken = accessToken;
+      profile.provider = 'google';
       return done(null, profile);
     }
   ));
@@ -64,6 +67,7 @@ if (isFacebookConfigured) {
     (accessToken, refreshToken, profile, done) => {
       // Store the access token if needed for Graph API calls later
       profile.accessToken = accessToken;
+      profile.provider = 'facebook';
       return done(null, profile);
     }
   ));
@@ -76,6 +80,7 @@ passport.serializeUser((user, done) => {
     displayName: user.displayName,
     photos: user.photos,
     emails: user.emails,
+    provider: user.provider,
     accessToken: user.accessToken // Crucial for Facebook Graph API calls
   });
 });
@@ -238,7 +243,7 @@ app.get('/auth/google', (req, res, next) => {
   if (!isGoogleConfigured) {
     return res.status(501).json({ error: 'Google OAuth not configured' });
   }
-  passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+  passport.authenticate('google', { scope: ['profile', 'email', 'https://www.googleapis.com/auth/drive.file'] })(req, res, next);
 });
 
 app.get('/auth/google/callback', (req, res, next) => {
@@ -482,6 +487,49 @@ app.post('/api/facebook/post', async (req, res) => {
   } catch (error) {
     console.error('Error posting to Facebook:', error.response?.data || error.message);
     res.status(500).json({ error: 'Failed to post to Facebook', details: error.response?.data });
+  }
+});
+
+app.post('/api/google-drive/upload', async (req, res) => {
+  if (!req.isAuthenticated() || !req.user.accessToken) {
+    return res.status(401).json({ error: 'Not authenticated with Google' });
+  }
+
+  const { mediaUrl, fileName, mimeType } = req.body;
+
+  if (!mediaUrl || !fileName) {
+    return res.status(400).json({ error: 'Media URL and file name are required' });
+  }
+
+  try {
+    const auth = new google.auth.OAuth2();
+    auth.setCredentials({ access_token: req.user.accessToken });
+
+    const drive = google.drive({ version: 'v3', auth });
+
+    // 1. Download the media from the URL
+    const mediaResponse = await axios.get(mediaUrl, { responseType: 'stream' });
+
+    // 2. Upload to Google Drive
+    const fileMetadata = {
+      name: fileName,
+    };
+
+    const media = {
+      mimeType: mimeType || 'image/jpeg',
+      body: mediaResponse.data,
+    };
+
+    const driveResponse = await drive.files.create({
+      resource: fileMetadata,
+      media: media,
+      fields: 'id, webViewLink',
+    });
+
+    res.json({ success: true, fileId: driveResponse.data.id, link: driveResponse.data.webViewLink });
+  } catch (error) {
+    console.error('Error uploading to Google Drive:', error);
+    res.status(500).json({ error: 'Failed to upload to Google Drive', details: error.message });
   }
 });
 

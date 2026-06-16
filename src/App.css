@@ -1317,3 +1317,13 @@ footer {
 .facebook-post-btn:hover {
   background: #166fe5;
 }
+
+.google-drive-btn {
+  background: #34a853;
+  color: white;
+  border: none;
+}
+
+.google-drive-btn:hover {
+  background: #2d9249;
+}

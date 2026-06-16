@@ -25,6 +25,7 @@ function App() {
   const [history, setHistory] = useState([]);
   const [copySuccess, setCopySuccess] = useState('');
   const [isPostingToFacebook, setIsPostingToFacebook] = useState(false);
+  const [isSavingToDrive, setIsSavingToDrive] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -163,6 +164,36 @@ function App() {
       alert('Error posting to Facebook. Make sure you are logged in with Facebook.');
     } finally {
       setIsPostingToFacebook(false);
+    }
+  };
+
+  const handleSaveToGoogleDrive = async () => {
+    if (!previewImage && !previewVideo) return;
+    setIsSavingToDrive(true);
+    try {
+      const response = await fetch(`${API_URL}/api/google-drive/upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          mediaUrl: previewVideo || previewImage,
+          fileName: `DesignAI-${mode}-${Date.now()}.${previewVideo ? 'mp4' : 'jpg'}`,
+          mimeType: previewVideo ? 'video/mp4' : 'image/jpeg'
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert('Successfully saved to Google Drive!');
+      } else {
+        alert('Failed to save to Google Drive: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error saving to Google Drive:', error);
+      alert('Error saving to Google Drive. Make sure you are logged in with Google.');
+    } finally {
+      setIsSavingToDrive(false);
     }
   };
 
@@ -1021,6 +1052,15 @@ function App() {
                           disabled={isPostingToFacebook}
                         >
                           {isPostingToFacebook ? 'Posting...' : '📱 Post to Facebook Feed'}
+                        </button>
+                      )}
+                      {user && user.provider === 'google' && (
+                        <button
+                          className="secondary-button google-drive-btn"
+                          onClick={handleSaveToGoogleDrive}
+                          disabled={isSavingToDrive}
+                        >
+                          {isSavingToDrive ? 'Saving...' : '📂 Save to Google Drive'}
                         </button>
                       )}
                     </div>
