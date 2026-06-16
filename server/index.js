@@ -7,6 +7,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const session = require('express-session');
 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
+const { ChatAnthropic } = require('@langchain/anthropic');
 const { HumanMessage } = require('@langchain/core/messages');
 const { Octokit } = require('octokit');
 require('dotenv').config();
@@ -121,14 +122,20 @@ app.get('/api/shopline/products', async (req, res) => {
   }
 });
 
-// Initialize LangChain ChatGoogleGenerativeAI
-const chatModel = new ChatGoogleGenerativeAI({
+// Initialize LangChain ChatGoogleGenerativeAI (Google AI Studio)
+const googleModel = new ChatGoogleGenerativeAI({
   model: "gemini-1.5-flash",
   apiKey: process.env.GOOGLE_AI_API_KEY || 'dummy_key',
 });
 
+// Initialize LangChain ChatAnthropic (Claude)
+const claudeModel = new ChatAnthropic({
+  model: "claude-3-5-sonnet-20240620",
+  apiKey: process.env.ANTHROPIC_API_KEY || 'dummy_key',
+});
+
 app.post('/api/generate', async (req, res) => {
-  const { prompt, mode, product } = req.body;
+  const { prompt, mode, product, provider = 'google' } = req.body;
 
   if (!prompt || !mode) {
     return res.status(400).json({ error: 'Prompt and mode are required' });
@@ -146,7 +153,11 @@ app.post('/api/generate', async (req, res) => {
     let insight = '';
 
     // Attempt to use LangChain for insight if API key is provided
-    if (process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here') {
+    const hasGoogleKey = process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here';
+    const hasClaudeKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'your_anthropic_api_key_here';
+
+    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey)) {
+      const chatModel = provider === 'claude' ? claudeModel : googleModel;
       let aiPrompt = `As a design expert, provide a short, inspiring design insight (2 sentences) for the following ${mode} request: "${prompt}"`;
 
       if (mode === 'shopline' && product) {
@@ -381,11 +392,15 @@ app.post('/api/github/deploy', async (req, res) => {
 });
 
 app.post('/api/github/copilot-suggestion', async (req, res) => {
-  const { prompt, mode } = req.body;
+  const { prompt, mode, provider = 'google' } = req.body;
 
   try {
     let suggestion = '';
-    if (process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here') {
+    const hasGoogleKey = process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here';
+    const hasClaudeKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'your_anthropic_api_key_here';
+
+    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey)) {
+      const chatModel = provider === 'claude' ? claudeModel : googleModel;
       const aiPrompt = `As GitHub Copilot, provide a snippet of high-quality React or CSS code that would enhance a "${mode}" project with the following description: "${prompt}". Also explain why this code helps.`;
 
       const response = await chatModel.invoke([
@@ -404,7 +419,7 @@ app.post('/api/github/copilot-suggestion', async (req, res) => {
 });
 
 app.post('/api/dropshipper/suggestions', async (req, res) => {
-  const { niche } = req.body;
+  const { niche, provider = 'google' } = req.body;
 
   if (!niche) {
     return res.status(400).json({ error: 'Niche is required' });
@@ -412,7 +427,11 @@ app.post('/api/dropshipper/suggestions', async (req, res) => {
 
   try {
     let suggestions = [];
-    if (process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here') {
+    const hasGoogleKey = process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here';
+    const hasClaudeKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'your_anthropic_api_key_here';
+
+    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey)) {
+      const chatModel = provider === 'claude' ? claudeModel : googleModel;
       const aiPrompt = `As an AI Dropshipping expert, suggest 3 trending products and a basic marketing strategy for the niche: "${niche}". Return the response as a JSON array of objects with "title", "reason", and "strategy" fields.`;
 
       const response = await chatModel.invoke([
