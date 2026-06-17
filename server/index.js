@@ -289,14 +289,36 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
 
 app.post('/api/generate', async (req, res) => {
-  const { prompt, mode, product, provider = 'google', useRAG = false, fineTunedModel = null } = req.body;
+  let { prompt, mode, product, provider = 'google', useRAG = false, fineTunedModel = null } = req.body;
 
   if (!prompt || !mode) {
     return res.status(400).json({ error: 'Prompt and mode are required' });
   }
 
+  // Smart Mode Detection
+  let detectedMode = mode;
+  if (mode === 'smart') {
+    const lowerPrompt = prompt.toLowerCase();
+    if (lowerPrompt.includes('web') || lowerPrompt.includes('landing page') || lowerPrompt.includes('website')) detectedMode = 'web';
+    else if (lowerPrompt.includes('mobile') || lowerPrompt.includes('app') || lowerPrompt.includes('ios') || lowerPrompt.includes('android')) detectedMode = 'mobile';
+    else if (lowerPrompt.includes('poster') || lowerPrompt.includes('affiche') || lowerPrompt.includes('banner')) detectedMode = 'posters';
+    else if (lowerPrompt.includes('logo') || lowerPrompt.includes('icon') || lowerPrompt.includes('graphic')) detectedMode = 'graphics';
+    else if (lowerPrompt.includes('video') || lowerPrompt.includes('movie') || lowerPrompt.includes('cinema') || lowerPrompt.includes('shot')) detectedMode = 'cinema';
+    else if (lowerPrompt.includes('music') || lowerPrompt.includes('audio') || lowerPrompt.includes('song') || lowerPrompt.includes('beat')) detectedMode = 'music';
+    else if (lowerPrompt.includes('product') || lowerPrompt.includes('shop') || lowerPrompt.includes('ecommerce')) detectedMode = 'shopline';
+    else if (lowerPrompt.includes('code') || lowerPrompt.includes('github') || lowerPrompt.includes('repo')) detectedMode = 'github';
+    else if (lowerPrompt.includes('game')) detectedMode = 'games';
+    else if (lowerPrompt.includes('finetune') || lowerPrompt.includes('train')) detectedMode = 'finetuning';
+    else if (lowerPrompt.includes('map') || lowerPrompt.includes('location') || lowerPrompt.includes('place')) detectedMode = 'maps';
+    else if (lowerPrompt.includes('health') || lowerPrompt.includes('medical') || lowerPrompt.includes('doctor')) detectedMode = 'health';
+    else if (lowerPrompt.includes('finance') || lowerPrompt.includes('bank') || lowerPrompt.includes('money')) detectedMode = 'finance';
+    else if (lowerPrompt.includes('education') || lowerPrompt.includes('learn') || lowerPrompt.includes('school')) detectedMode = 'education';
+    else if (lowerPrompt.includes('sport') || lowerPrompt.includes('football') || lowerPrompt.includes('fitness')) detectedMode = 'sports';
+    else detectedMode = 'web'; // Default to web if unsure
+  }
+
   let imageUrl = null;
-  let videoUrl = (mode === 'video' || mode === 'cinema') ? 'https://www.w3schools.com/html/mov_bbb.mp4' : null;
+  let videoUrl = (detectedMode === 'video' || detectedMode === 'cinema') ? 'https://www.w3schools.com/html/mov_bbb.mp4' : null;
 
   try {
     // 1. Generate Image if not a video mode
@@ -305,7 +327,7 @@ app.post('/api/generate', async (req, res) => {
         try {
           const response = await openai.images.generate({
             model: "dall-e-3",
-            prompt: `Professional high-quality design for: ${mode}, ${prompt}`,
+            prompt: `Professional high-quality design for: ${detectedMode}, ${prompt}`,
             n: 1,
             size: "1024x1024",
           });
@@ -317,7 +339,7 @@ app.post('/api/generate', async (req, res) => {
         try {
           const response = await hf.textToImage({
             model: 'stabilityai/stable-diffusion-xl-base-1.0',
-            inputs: `${mode} design: ${prompt}`,
+            inputs: `${detectedMode} design: ${prompt}`,
           });
           // Convert Blob to Base64 for easier transport
           const buffer = Buffer.from(await response.arrayBuffer());
@@ -329,7 +351,7 @@ app.post('/api/generate', async (req, res) => {
 
       // Fallback to loremflickr if no AI image was generated
       if (!imageUrl) {
-        const keywords = product ? `${product.title},${prompt}` : `${mode},${prompt}`;
+        const keywords = product ? `${product.title},${prompt}` : `${detectedMode},${prompt}`;
         const tagString = keywords.replace(/\s+/g, ',').split(',').map(tag => encodeURIComponent(tag)).join(',');
         imageUrl = `https://loremflickr.com/800/600/${tagString}`;
       }
@@ -349,93 +371,102 @@ app.post('/api/generate', async (req, res) => {
         chatModel = claudeModel;
       } else if (provider === 'openrouter') {
         chatModel = openRouterModel;
-      } else if (provider === 'openai') {
+      } else if (provider === 'openai' || fineTunedModel) {
         chatModel = new ChatOpenAI({
-          openAIApiKey: process.env.OPENAI_API_KEY,
+          openAIApiKey: process.env.OPENAI_API_KEY || 'dummy_key',
           modelName: fineTunedModel || 'gpt-3.5-turbo'
         });
       } else {
         chatModel = googleModel;
       }
-      let systemPrompt = "You are a professional design expert.";
-      let humanPrompt = `Provide a short, inspiring design insight (2 sentences) for the following ${mode} request: "${prompt}"`;
 
-      if (mode === 'shopline' && product) {
+      // Automatically use fine-tuned model if available and in smart mode
+      if (mode === 'smart' && fineTunedModel) {
+        chatModel = new ChatOpenAI({
+          openAIApiKey: process.env.OPENAI_API_KEY || 'dummy_key',
+          modelName: fineTunedModel
+        });
+      }
+
+      let systemPrompt = "You are a professional design expert.";
+      let humanPrompt = `Provide a short, inspiring design insight (2 sentences) for the following ${detectedMode} request: "${prompt}"`;
+
+      if (detectedMode === 'shopline' && product) {
         systemPrompt = "You are an e-commerce and dropshipping expert.";
         humanPrompt = `Provide a short, inspiring insight (2 sentences) for a product promotion. Product: "${product.title}". Request: "${prompt}"`;
-      } else if (mode === 'cinema') {
+      } else if (detectedMode === 'cinema') {
         systemPrompt = "You are a cinematography expert.";
         humanPrompt = `Provide a short, professional insight (2 sentences) for this shot/scene request: "${prompt}"`;
-      } else if (mode === 'music') {
+      } else if (detectedMode === 'music') {
         systemPrompt = "You are a professional music producer.";
         humanPrompt = `Provide a short, inspiring insight (2 sentences) for this audio/music request: "${prompt}"`;
-      } else if (mode === 'entertainment') {
+      } else if (detectedMode === 'entertainment') {
         systemPrompt = "You are a global entertainment industry expert.";
         humanPrompt = `Provide a short, strategic insight (2 sentences) for this project: "${prompt}"`;
-      } else if (mode === 'ad-creative') {
+      } else if (detectedMode === 'ad-creative') {
         systemPrompt = "You are an expert ad creative director.";
         humanPrompt = `Provide a short, high-conversion insight (2 sentences) for this advertisement request: "${prompt}"`;
-      } else if (mode === 'web') {
+      } else if (detectedMode === 'web') {
         systemPrompt = "You are a professional web designer.";
         humanPrompt = `Provide a short, strategic insight (2 sentences) for this layout request: "${prompt}"`;
-      } else if (mode === 'mobile') {
+      } else if (detectedMode === 'mobile') {
         systemPrompt = "You are a mobile UI/UX design expert.";
         humanPrompt = `Provide a short, professional insight (2 sentences) for this mobile app/interface request: "${prompt}"`;
-      } else if (mode === 'desktop') {
+      } else if (detectedMode === 'desktop') {
         systemPrompt = "You are a desktop software interface design expert.";
         humanPrompt = `Provide a short, strategic insight (2 sentences) for this application layout request: "${prompt}"`;
-      } else if (mode === 'graphics') {
+      } else if (detectedMode === 'graphics') {
         systemPrompt = "You are a graphic design expert.";
         humanPrompt = `Provide a short, professional insight (2 sentences) for this graphic request: "${prompt}"`;
-      } else if (mode === 'posters') {
+      } else if (detectedMode === 'posters') {
         systemPrompt = "You are a professional poster designer.";
         humanPrompt = `Provide a short, artistic insight (2 sentences) for this poster request: "${prompt}"`;
-      } else if (mode === 'games') {
+      } else if (detectedMode === 'games') {
         systemPrompt = "You are a game design and development expert.";
         humanPrompt = `Provide a short, strategic insight (2 sentences) for this game-related request: "${prompt}"`;
-      } else if (mode === 'automotive') {
+      } else if (detectedMode === 'automotive') {
         systemPrompt = "You are an automotive and aerospace design expert.";
         humanPrompt = `Provide a short, technical and inspiring insight (2 sentences) for this vehicle/aircraft concept: "${prompt}"`;
-      } else if (mode === 'dropshipper') {
+      } else if (detectedMode === 'dropshipper') {
         systemPrompt = "You are a dropshipping and e-commerce expert.";
         humanPrompt = `Provide a short, strategic insight (2 sentences) for this product discovery or marketing request: "${prompt}"`;
-      } else if (mode === 'telecoms') {
+      } else if (detectedMode === 'telecoms') {
         systemPrompt = "You are a telecommunications infrastructure and network expert.";
         humanPrompt = `Provide a short, technical and strategic insight (2 sentences) for this request: "${prompt}"`;
-      } else if (mode === 'medias') {
+      } else if (detectedMode === 'medias') {
         systemPrompt = "You are a media production and broadcasting expert.";
         humanPrompt = `Provide a short, professional insight (2 sentences) for this request: "${prompt}"`;
-      } else if (mode === 'social-networks') {
+      } else if (detectedMode === 'social-networks') {
         systemPrompt = "You are a social media strategist and content creator.";
         humanPrompt = `Provide a short, high-engagement insight (2 sentences) for this request: "${prompt}"`;
-      } else if (mode === 'github') {
+      } else if (detectedMode === 'github') {
         systemPrompt = "You are a GitHub ecosystem and open source expert.";
         humanPrompt = `Provide a short, professional insight (2 sentences) for this GitHub Pages or repository request: "${prompt}"`;
-      } else if (mode === 'sports') {
+      } else if (detectedMode === 'sports') {
         systemPrompt = "You are a sports branding and performance analytics expert.";
         humanPrompt = `Provide a short, professional insight (2 sentences) for this sports-related request: "${prompt}"`;
-      } else if (mode === 'health') {
+      } else if (detectedMode === 'health') {
         systemPrompt = "You are a medical interface and healthcare design expert.";
         humanPrompt = `Provide a short, professional and precise insight (2 sentences) for this health-related request: "${prompt}"`;
-      } else if (mode === 'finance') {
+      } else if (detectedMode === 'finance') {
         systemPrompt = "You are a finance AI expert for banks, insurance, VC, fintechs, and mobile operators.";
         humanPrompt = `Provide a short, professional and strategic marketing/product insight (2 sentences) for this request: "${prompt}"`;
-      } else if (mode === 'art-ai') {
+      } else if (detectedMode === 'art-ai') {
         systemPrompt = "You are a professional AI artist and digital painter.";
         humanPrompt = `Provide a short, inspiring insight (2 sentences) about the artistic style and technique for this request: "${prompt}"`;
-      } else if (mode === 'education') {
+      } else if (detectedMode === 'education') {
         systemPrompt = "You are a global education and ed-tech expert.";
         humanPrompt = `Provide a short, professional and strategic insight (2 sentences) for this educational design or content request: "${prompt}"`;
-      } else if (mode === 'maps') {
+      } else if (detectedMode === 'maps') {
         systemPrompt = "You are a geographic design and cartography expert.";
         humanPrompt = `Provide a short, professional insight (2 sentences) for this map-related design request: "${prompt}"`;
-      } else if (mode === 'ai-projects') {
+      } else if (detectedMode === 'ai-projects') {
         systemPrompt = "You are an AI projects and systems development expert.";
         humanPrompt = `Provide a short, strategic technical insight (2 sentences) for this AI project request: "${prompt}"`;
-      } else if (mode === 'web3') {
+      } else if (detectedMode === 'web3') {
         systemPrompt = "You are a Web3 and blockchain development expert.";
         humanPrompt = `Provide a short, professional insight (2 sentences) for this decentralized application or Web3 request: "${prompt}"`;
-      } else if (mode === 'ml-tools') {
+      } else if (detectedMode === 'ml-tools') {
         systemPrompt = "You are a machine learning and data science tools expert.";
         humanPrompt = `Provide a short, professional insight (2 sentences) for this ML tool or data task: "${prompt}"`;
       }
@@ -477,17 +508,17 @@ app.post('/api/generate', async (req, res) => {
       imageUrl,
       videoUrl,
       insight,
-      mode
+      mode: detectedMode
     });
   } catch (error) {
-    console.error('Error with Google AI API:', error);
+    console.error('Error with AI API:', error);
     // Fallback to simple response if AI fails
     res.json({
       imageUrl,
       videoUrl,
-      insight: `Design insight: Focus on balance and typography for your ${mode} project.`,
-      mode,
-      error: 'Google AI API error, using fallback'
+      insight: `Design insight: Focus on balance and typography for your ${detectedMode} project.`,
+      mode: detectedMode,
+      error: 'AI API error, using fallback'
     });
   }
 });

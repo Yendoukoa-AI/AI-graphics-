@@ -26,7 +26,7 @@ function App() {
   const [previewImage, setPreviewImage] = useState(null);
   const [previewVideo, setPreviewVideo] = useState(null);
   const [aiInsight, setAiInsight] = useState('');
-  const [mode, setMode] = useState('web');
+  const [mode, setMode] = useState('smart');
   const [shoplineProducts, setShoplineProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isFetchingProducts, setIsFetchingProducts] = useState(false);
@@ -1162,243 +1162,84 @@ function App() {
 
         <div className="ai-editor">
           <div className="mode-selector-container">
-            <div className="provider-selector" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255,255,255,0.05)', padding: '0.8rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#94a3b8' }}>AI Provider:</span>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  className={`mode-btn ${provider === 'google' ? 'active' : ''}`}
-                  onClick={() => setProvider('google')}
-                  style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
-                >
-                  Google Gemini
+            <div className="main-smart-controls">
+              <button
+                className={`smart-toggle-btn ${mode === 'smart' ? 'active' : ''}`}
+                onClick={() => setMode('smart')}
+              >
+                <span className="sparkle">✨</span> Smart Unified AI
+              </button>
+              <div className="advanced-dropdown">
+                <button className="secondary-button dropdown-trigger">
+                  Advanced Options ▾
                 </button>
-                <button
-                  className={`mode-btn ${provider === 'claude' ? 'active' : ''}`}
-                  onClick={() => setProvider('claude')}
-                  style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
-                >
-                  Anthropic Claude
-                </button>
-                <button
-                  className={`mode-btn ${provider === 'openrouter' ? 'active' : ''}`}
-                  onClick={() => setProvider('openrouter')}
-                  style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
-                >
-                  OpenRouter
-                </button>
-                <button
-                  className={`mode-btn ${provider === 'openai' ? 'active' : ''}`}
-                  onClick={() => setProvider('openai')}
-                  style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
-                >
-                  OpenAI (DALL-E)
-                </button>
-                <button
-                  className={`mode-btn ${provider === 'huggingface' ? 'active' : ''}`}
-                  onClick={() => setProvider('huggingface')}
-                  style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
-                >
-                  Hugging Face
-                </button>
-              </div>
-              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <label className="rag-toggle" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem', color: '#94a3b8' }}>
-                  <input
-                    type="checkbox"
-                    checked={useRAG}
-                    onChange={(e) => setUseRAG(e.target.checked)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                  Enable RAG AI (Supabase)
-                </label>
-              </div>
-            </div>
-
-            <div className="mode-group">
-              <span className="group-label">Core Design</span>
-              <div className="mode-selector">
-                <button
-                  className={`mode-btn ${mode === 'web' ? 'active' : ''}`}
-                  onClick={() => setMode('web')}
-                >
-                  Web Design
-                </button>
-                <button
-                  className={`mode-btn ${mode === 'mobile' ? 'active' : ''}`}
-                  onClick={() => setMode('mobile')}
-                >
-                  Mobile Design
-                </button>
-                <button
-                  className={`mode-btn ${mode === 'desktop' ? 'active' : ''}`}
-                  onClick={() => setMode('desktop')}
-                >
-                  Desktop App
-                </button>
-                <button
-                  className={`mode-btn ${mode === 'graphics' ? 'active' : ''}`}
-                  onClick={() => setMode('graphics')}
-                >
-                  Graphics
-                </button>
-                <button
-                  className={`mode-btn ${mode === 'posters' ? 'active' : ''}`}
-                  onClick={() => setMode('posters')}
-                >
-                  Posters
-                </button>
-              </div>
-            </div>
-
-            <div className="mode-group">
-              <span className="group-label">AI Enhancements</span>
-              <div className="mode-selector">
-                <button
-                  className={`mode-btn enhancement ${mode === 'cinema' ? 'active' : ''}`}
-                  onClick={() => setMode('cinema')}
-                >
-                  Cinema
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'music' ? 'active' : ''}`}
-                  onClick={() => setMode('music')}
-                >
-                  Music
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'entertainment' ? 'active' : ''}`}
-                  onClick={() => setMode('entertainment')}
-                >
-                  Global Ent.
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'ad-creative' ? 'active' : ''}`}
-                  onClick={() => setMode('ad-creative')}
-                >
-                  Ads
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'shopline' ? 'active' : ''}`}
-                  onClick={() => {
-                    setMode('shopline');
-                    if (shoplineProducts.length === 0) {
-                      fetchShoplineProducts();
-                    }
-                  }}
-                >
-                  Shopline
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'langflow' ? 'active' : ''}`}
-                  onClick={() => setMode('langflow')}
-                >
-                  LangFlow
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'games' ? 'active' : ''}`}
-                  onClick={() => setMode('games')}
-                >
-                  Games
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'automotive' ? 'active' : ''}`}
-                  onClick={() => setMode('automotive')}
-                >
-                  Automotive
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'dropshipper' ? 'active' : ''}`}
-                  onClick={() => setMode('dropshipper')}
-                >
-                  Dropshipper
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'telecoms' ? 'active' : ''}`}
-                  onClick={() => setMode('telecoms')}
-                >
-                  Telecoms
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'medias' ? 'active' : ''}`}
-                  onClick={() => setMode('medias')}
-                >
-                  Medias
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'social-networks' ? 'active' : ''}`}
-                  onClick={() => setMode('social-networks')}
-                >
-                  Social
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'sports' ? 'active' : ''}`}
-                  onClick={() => setMode('sports')}
-                >
-                  Sports
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'health' ? 'active' : ''}`}
-                  onClick={() => setMode('health')}
-                >
-                  Health
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'finance' ? 'active' : ''}`}
-                  onClick={() => setMode('finance')}
-                >
-                  Finance
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'art-ai' ? 'active' : ''}`}
-                  onClick={() => setMode('art-ai')}
-                >
-                  Art AI
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'education' ? 'active' : ''}`}
-                  onClick={() => setMode('education')}
-                >
-                  Education
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'maps' ? 'active' : ''}`}
-                  onClick={() => setMode('maps')}
-                >
-                  Maps AI
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'ai-projects' ? 'active' : ''}`}
-                  onClick={() => setMode('ai-projects')}
-                >
-                  AI Projects
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'web3' ? 'active' : ''}`}
-                  onClick={() => setMode('web3')}
-                >
-                  Web3
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'ml-tools' ? 'active' : ''}`}
-                  onClick={() => setMode('ml-tools')}
-                >
-                  ML Tools
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'finetuning' ? 'active' : ''}`}
-                  onClick={() => {
-                    setMode('finetuning');
-                    fetchFineTuningData();
-                  }}
-                >
-                  Fine Tuning
-                </button>
-                <button
-                  className={`mode-btn enhancement ${mode === 'github' ? 'active' : ''}`}
-                  onClick={() => setMode('github')}
-                >
-                  View on GitHub Session
-                </button>
+                <div className="dropdown-content">
+                  <div className="dropdown-section">
+                    <span className="section-label">Specialized Expertise</span>
+                    <select
+                      value={mode === 'smart' ? 'web' : mode}
+                      onChange={(e) => {
+                        setMode(e.target.value);
+                        if (e.target.value === 'shopline') fetchShoplineProducts();
+                        if (e.target.value === 'finetuning') fetchFineTuningData();
+                      }}
+                      className="mode-select-input"
+                    >
+                      <optgroup label="Core Design">
+                        <option value="web">Web Design</option>
+                        <option value="mobile">Mobile Design</option>
+                        <option value="desktop">Desktop App</option>
+                        <option value="graphics">Graphics</option>
+                        <option value="posters">Posters</option>
+                      </optgroup>
+                      <optgroup label="Creative AI">
+                        <option value="cinema">Cinema</option>
+                        <option value="music">Music</option>
+                        <option value="art-ai">Art AI Painter</option>
+                      </optgroup>
+                      <optgroup label="Business & Tech">
+                        <option value="ad-creative">Ads</option>
+                        <option value="shopline">Shopline</option>
+                        <option value="dropshipper">Dropshipper</option>
+                        <option value="finance">Finance</option>
+                        <option value="telecoms">Telecoms</option>
+                      </optgroup>
+                      <optgroup label="Advanced Tools">
+                        <option value="github">GitHub Session</option>
+                        <option value="langflow">LangFlow</option>
+                        <option value="ml-tools">ML Tools</option>
+                        <option value="ai-projects">AI Projects</option>
+                        <option value="web3">Web3</option>
+                        <option value="finetuning">Fine Tuning</option>
+                        <option value="maps">Maps AI</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div className="dropdown-section">
+                    <span className="section-label">AI Provider</span>
+                    <select
+                      value={provider}
+                      onChange={(e) => setProvider(e.target.value)}
+                      className="mode-select-input"
+                    >
+                      <option value="google">Google Gemini</option>
+                      <option value="claude">Anthropic Claude</option>
+                      <option value="openrouter">OpenRouter</option>
+                      <option value="openai">OpenAI (DALL-E)</option>
+                      <option value="huggingface">Hugging Face</option>
+                    </select>
+                  </div>
+                  <div className="dropdown-section">
+                    <label className="rag-toggle-inline">
+                      <input
+                        type="checkbox"
+                        checked={useRAG}
+                        onChange={(e) => setUseRAG(e.target.checked)}
+                      />
+                      Use RAG AI Knowledge Base
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

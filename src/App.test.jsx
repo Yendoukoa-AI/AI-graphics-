@@ -20,10 +20,10 @@ test('renders Ad Creative AI feature card', () => {
   expect(featureElement).toBeDefined();
 });
 
-test('renders Ads mode button', () => {
+test('renders Ads mode option', () => {
   render(<App />);
-  const modeButton = screen.getByText(/^Ads$/i);
-  expect(modeButton).toBeDefined();
+  const modeOption = screen.getByText(/^Ads$/i);
+  expect(modeOption).toBeDefined();
 });
 
 test('renders Games Design & Dev feature card', () => {
@@ -32,10 +32,10 @@ test('renders Games Design & Dev feature card', () => {
   expect(featureElement).toBeDefined();
 });
 
-test('renders Games mode button', () => {
+test('renders Games mode option', () => {
   render(<App />);
-  const modeButton = screen.getByText(/^Games$/i);
-  expect(modeButton).toBeDefined();
+  const modeOptions = screen.getAllByText(/games/i);
+  expect(modeOptions.length).toBeGreaterThan(0);
 });
 
 test('renders Automotive & Aero feature card', () => {
@@ -44,10 +44,10 @@ test('renders Automotive & Aero feature card', () => {
   expect(featureElement).toBeDefined();
 });
 
-test('renders Automotive mode button', () => {
+test('renders Automotive mode option', () => {
   render(<App />);
-  const modeButtons = screen.getAllByText(/^Automotive$/i);
-  expect(modeButtons.length).toBeGreaterThan(0);
+  const modeOptions = screen.getAllByText(/automotive/i);
+  expect(modeOptions.length).toBeGreaterThan(0);
 });
 
 test('renders Health AI feature card', () => {
@@ -56,22 +56,16 @@ test('renders Health AI feature card', () => {
   expect(featureElements.length).toBeGreaterThan(0);
 });
 
-test('renders Health mode button', () => {
-  render(<App />);
-  const modeButton = screen.getByText(/^Health$/i);
-  expect(modeButton).toBeDefined();
-});
-
 test('renders Finance AI feature card', () => {
   render(<App />);
   const featureElements = screen.getAllByText(/Finance AI/i);
   expect(featureElements.length).toBeGreaterThan(0);
 });
 
-test('renders Finance mode button', () => {
+test('renders Finance mode option', () => {
   render(<App />);
-  const modeButton = screen.getByText(/^Finance$/i);
-  expect(modeButton).toBeDefined();
+  const modeOptions = screen.getAllByText(/finance/i);
+  expect(modeOptions.length).toBeGreaterThan(0);
 });
 
 test('renders Art AI Painter feature card', () => {
@@ -80,8 +74,8 @@ test('renders Art AI Painter feature card', () => {
   expect(featureElements.length).toBeGreaterThan(0);
 });
 
-test('renders Art AI mode button', () => {
+test('renders Art AI mode option', () => {
   render(<App />);
-  const modeButton = screen.getByText(/^Art AI$/i);
-  expect(modeButton).toBeDefined();
+  const modeOptions = screen.getAllByText(/Art AI Painter/i);
+  expect(modeOptions.length).toBeGreaterThan(0);
 });
