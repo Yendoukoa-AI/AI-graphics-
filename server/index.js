@@ -22,6 +22,9 @@ const multer = require('multer');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
+const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 const { sequelize, User } = require('./models');
 const { Op } = require('sequelize');
 require('dotenv').config();
@@ -120,6 +123,15 @@ if (isGoogleConfigured) {
             providerId: profile.id,
             photos: profile.photos
           });
+            // Try to sync with AWS if configured
+            if (isAwsConfigured && process.env.AWS_USER_TABLE) {
+              try {
+                // Mock sync with DynamoDB or S3 for persistence
+                console.log(`Syncing user ${user.email} to AWS...`);
+              } catch (e) {
+                console.error('AWS user sync failed:', e.message);
+              }
+            }
         }
         return done(null, user.toJSON());
       } catch (err) {
@@ -199,8 +211,21 @@ const sendWelcomeEmail = async (email, displayName) => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
-    console.log('Welcome email sent to:', email);
+    if (isAwsConfigured && process.env.AWS_SES_FROM_EMAIL) {
+      const command = new SendEmailCommand({
+        Source: process.env.AWS_SES_FROM_EMAIL,
+        Destination: { ToAddresses: [email] },
+        Message: {
+          Subject: { Data: 'Welcome to DesignAI Studio!' },
+          Body: { Text: { Data: `Hi ${displayName},\n\nWelcome to DesignAI Studio! We're excited to have you on board.\n\nBest regards,\nThe DesignAI Team` } }
+        }
+      });
+      await sesClient.send(command);
+      console.log('Welcome email sent via AWS SES to:', email);
+    } else {
+      await transporter.sendMail(mailOptions);
+      console.log('Welcome email sent via Nodemailer to:', email);
+    }
   } catch (error) {
     console.error('Error sending welcome email:', error);
   }
@@ -277,6 +302,21 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'dummy_key',
 });
 
+// Initialize AWS Clients
+const awsConfig = {
+  region: process.env.AWS_REGION || 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'dummy',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'dummy'
+  }
+};
+
+const s3Client = new S3Client(awsConfig);
+const bedrockClient = new BedrockRuntimeClient(awsConfig);
+const sesClient = new SESClient(awsConfig);
+
+const isAwsConfigured = !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY);
+
 // Configure Multer for file uploads
 const UPLOADS_DIR = 'uploads/';
 if (!fs.existsSync(UPLOADS_DIR)) {
@@ -315,6 +355,7 @@ app.post('/api/generate', async (req, res) => {
     else if (lowerPrompt.includes('finance') || lowerPrompt.includes('bank') || lowerPrompt.includes('money')) detectedMode = 'finance';
     else if (lowerPrompt.includes('education') || lowerPrompt.includes('learn') || lowerPrompt.includes('school')) detectedMode = 'education';
     else if (lowerPrompt.includes('sport') || lowerPrompt.includes('football') || lowerPrompt.includes('fitness')) detectedMode = 'sports';
+    else if (lowerPrompt.includes('aws') || lowerPrompt.includes('cloud') || lowerPrompt.includes('amazon')) detectedMode = 'aws';
     else detectedMode = 'web'; // Default to web if unsure
   }
 
@@ -324,7 +365,52 @@ app.post('/api/generate', async (req, res) => {
   try {
     // 1. Generate Image if not a video mode
     if (!videoUrl) {
-      if (provider === 'openai' && process.env.OPENAI_API_KEY) {
+      if (provider === 'aws' && isAwsConfigured) {
+        try {
+          const params = {
+            modelId: "amazon.titan-image-generator-v1",
+            contentType: "application/json",
+            accept: "application/json",
+            body: JSON.stringify({
+              taskType: "TEXT_IMAGE",
+              textToImageParams: {
+                text: `${detectedMode} design: ${prompt}`,
+              },
+              imageGenerationConfig: {
+                numberOfImages: 1,
+                height: 1024,
+                width: 1024,
+                cfgScale: 8.0,
+                seed: Math.floor(Math.random() * 100000),
+              }
+            })
+          };
+
+          const command = new InvokeModelCommand(params);
+          const response = await bedrockClient.send(command);
+          const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+
+          if (responseBody.images && responseBody.images.length > 0) {
+            const base64Image = responseBody.images[0];
+            imageUrl = `data:image/png;base64,${base64Image}`;
+
+            // Optionally upload to S3 if bucket is configured
+            if (process.env.AWS_S3_BUCKET) {
+              const buffer = Buffer.from(base64Image, 'base64');
+              const fileName = `generated/${Date.now()}.png`;
+              await s3Client.send(new PutObjectCommand({
+                Bucket: process.env.AWS_S3_BUCKET,
+                Key: fileName,
+                Body: buffer,
+                ContentType: 'image/png'
+              }));
+              console.log(`Uploaded image to S3: ${fileName}`);
+            }
+          }
+        } catch (e) {
+          console.error('AWS Bedrock image generation failed:', e.message);
+        }
+      } else if (provider === 'openai' && process.env.OPENAI_API_KEY) {
         try {
           const response = await openai.images.generate({
             model: "dall-e-3",
@@ -360,147 +446,180 @@ app.post('/api/generate', async (req, res) => {
 
     let insight = '';
 
+    let systemPrompt = "You are a professional design expert.";
+    let humanPrompt = `Provide a short, inspiring design insight (2 sentences) for the following ${detectedMode} request: "${prompt}"`;
+
+    if (detectedMode === 'shopline' && product) {
+      systemPrompt = "You are an e-commerce and dropshipping expert.";
+      humanPrompt = `Provide a short, inspiring insight (2 sentences) for a product promotion. Product: "${product.title}". Request: "${prompt}"`;
+    } else if (detectedMode === 'cinema') {
+      systemPrompt = "You are a cinematography expert.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this shot/scene request: "${prompt}"`;
+    } else if (detectedMode === 'music') {
+      systemPrompt = "You are a professional music producer.";
+      humanPrompt = `Provide a short, inspiring insight (2 sentences) for this audio/music request: "${prompt}"`;
+    } else if (detectedMode === 'entertainment') {
+      systemPrompt = "You are a global entertainment industry expert.";
+      humanPrompt = `Provide a short, strategic insight (2 sentences) for this project: "${prompt}"`;
+    } else if (detectedMode === 'ad-creative') {
+      systemPrompt = "You are an expert ad creative director.";
+      humanPrompt = `Provide a short, high-conversion insight (2 sentences) for this advertisement request: "${prompt}"`;
+    } else if (detectedMode === 'web') {
+      systemPrompt = "You are a professional web designer.";
+      humanPrompt = `Provide a short, strategic insight (2 sentences) for this layout request: "${prompt}"`;
+    } else if (detectedMode === 'mobile') {
+      systemPrompt = "You are a mobile UI/UX design expert.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this mobile app/interface request: "${prompt}"`;
+    } else if (detectedMode === 'desktop') {
+      systemPrompt = "You are a desktop software interface design expert.";
+      humanPrompt = `Provide a short, strategic insight (2 sentences) for this application layout request: "${prompt}"`;
+    } else if (detectedMode === 'graphics') {
+      systemPrompt = "You are a graphic design expert.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this graphic request: "${prompt}"`;
+    } else if (detectedMode === 'posters') {
+      systemPrompt = "You are a professional poster designer.";
+      humanPrompt = `Provide a short, artistic insight (2 sentences) for this poster request: "${prompt}"`;
+    } else if (detectedMode === 'games') {
+      systemPrompt = "You are a game design and development expert.";
+      humanPrompt = `Provide a short, strategic insight (2 sentences) for this game-related request: "${prompt}"`;
+    } else if (detectedMode === 'automotive') {
+      systemPrompt = "You are an automotive and aerospace design expert.";
+      humanPrompt = `Provide a short, technical and inspiring insight (2 sentences) for this vehicle/aircraft concept: "${prompt}"`;
+    } else if (detectedMode === 'dropshipper') {
+      systemPrompt = "You are a dropshipping and e-commerce expert.";
+      humanPrompt = `Provide a short, strategic insight (2 sentences) for this product discovery or marketing request: "${prompt}"`;
+    } else if (detectedMode === 'telecoms') {
+      systemPrompt = "You are a telecommunications infrastructure and network expert.";
+      humanPrompt = `Provide a short, technical and strategic insight (2 sentences) for this request: "${prompt}"`;
+    } else if (detectedMode === 'medias') {
+      systemPrompt = "You are a media production and broadcasting expert.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this request: "${prompt}"`;
+    } else if (detectedMode === 'social-networks') {
+      systemPrompt = "You are a social media strategist and content creator.";
+      humanPrompt = `Provide a short, high-engagement insight (2 sentences) for this request: "${prompt}"`;
+    } else if (detectedMode === 'github') {
+      systemPrompt = "You are a GitHub ecosystem and open source expert.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this GitHub Pages or repository request: "${prompt}"`;
+    } else if (detectedMode === 'sports') {
+      systemPrompt = "You are a sports branding and performance analytics expert.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this sports-related request: "${prompt}"`;
+    } else if (detectedMode === 'health') {
+      systemPrompt = "You are a medical interface and healthcare design expert.";
+      humanPrompt = `Provide a short, professional and precise insight (2 sentences) for this health-related request: "${prompt}"`;
+    } else if (detectedMode === 'finance') {
+      systemPrompt = "You are a finance AI expert for banks, insurance, VC, fintechs, and mobile operators.";
+      humanPrompt = `Provide a short, professional and strategic marketing/product insight (2 sentences) for this request: "${prompt}"`;
+    } else if (detectedMode === 'art-ai') {
+      systemPrompt = "You are a professional AI artist and digital painter.";
+      humanPrompt = `Provide a short, inspiring insight (2 sentences) about the artistic style and technique for this request: "${prompt}"`;
+    } else if (detectedMode === 'education') {
+      systemPrompt = "You are a global education and ed-tech expert.";
+      humanPrompt = `Provide a short, professional and strategic insight (2 sentences) for this educational design or content request: "${prompt}"`;
+    } else if (detectedMode === 'maps') {
+      systemPrompt = "You are a geographic design and cartography expert.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this map-related design request: "${prompt}"`;
+    } else if (detectedMode === 'ai-projects') {
+      systemPrompt = "You are an AI projects and systems development expert.";
+      humanPrompt = `Provide a short, strategic technical insight (2 sentences) for this AI project request: "${prompt}"`;
+    } else if (detectedMode === 'web3') {
+      systemPrompt = "You are a Web3 and blockchain development expert.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this decentralized application or Web3 request: "${prompt}"`;
+    } else if (detectedMode === 'aws') {
+      systemPrompt = "You are an AWS Cloud Architect and AI expert.";
+      humanPrompt = `Provide a short, professional and strategic insight (2 sentences) for this AWS cloud or architecture request: "${prompt}"`;
+    } else if (detectedMode === 'ml-tools') {
+      systemPrompt = "You are a machine learning and data science tools expert.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this ML tool or data task: "${prompt}"`;
+    }
+
+    // Simulated RAG Logic
+    let context = "";
+    if (useRAG && supabase) {
+      try {
+        // In a real RAG implementation, you would:
+        // 1. Generate an embedding for the prompt
+        // 2. Query Supabase vector store
+        // 3. Append context to the human prompt
+
+        // For this simulation, we'll try to fetch some relevant context if a 'documents' table exists
+        const { data, error } = await supabase
+          .from('documents')
+          .select('content')
+          .limit(1);
+
+        if (data && data.length > 0) {
+          context = `\n\nContext from knowledge base: ${data[0].content}`;
+        }
+      } catch (ragError) {
+        console.error('RAG Error:', ragError);
+        // Continue without RAG context if it fails
+      }
+    }
+
     // Attempt to use LangChain for insight if API key is provided
     const hasGoogleKey = process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here';
     const hasClaudeKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'your_anthropic_api_key_here';
     const hasOpenRouterKey = process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY !== 'your_openrouter_api_key_here';
     const hasOpenAIKey = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'dummy_key';
 
-    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'openrouter' && hasOpenRouterKey) || (provider === 'openai' && hasOpenAIKey)) {
-      let chatModel;
-      if (provider === 'claude') {
-        chatModel = claudeModel;
-      } else if (provider === 'openrouter') {
-        chatModel = openRouterModel;
-      } else if (provider === 'openai' || fineTunedModel) {
-        chatModel = new ChatOpenAI({
-          openAIApiKey: process.env.OPENAI_API_KEY || 'dummy_key',
-          modelName: fineTunedModel || 'gpt-3.5-turbo'
-        });
-      } else {
-        chatModel = googleModel;
-      }
+    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'openrouter' && hasOpenRouterKey) || (provider === 'openai' && hasOpenAIKey) || (provider === 'aws' && isAwsConfigured)) {
+      let insightContent = '';
 
-      // Automatically use fine-tuned model if available and in smart mode
-      if (mode === 'smart' && fineTunedModel) {
-        chatModel = new ChatOpenAI({
-          openAIApiKey: process.env.OPENAI_API_KEY || 'dummy_key',
-          modelName: fineTunedModel
-        });
-      }
-
-      let systemPrompt = "You are a professional design expert.";
-      let humanPrompt = `Provide a short, inspiring design insight (2 sentences) for the following ${detectedMode} request: "${prompt}"`;
-
-      if (detectedMode === 'shopline' && product) {
-        systemPrompt = "You are an e-commerce and dropshipping expert.";
-        humanPrompt = `Provide a short, inspiring insight (2 sentences) for a product promotion. Product: "${product.title}". Request: "${prompt}"`;
-      } else if (detectedMode === 'cinema') {
-        systemPrompt = "You are a cinematography expert.";
-        humanPrompt = `Provide a short, professional insight (2 sentences) for this shot/scene request: "${prompt}"`;
-      } else if (detectedMode === 'music') {
-        systemPrompt = "You are a professional music producer.";
-        humanPrompt = `Provide a short, inspiring insight (2 sentences) for this audio/music request: "${prompt}"`;
-      } else if (detectedMode === 'entertainment') {
-        systemPrompt = "You are a global entertainment industry expert.";
-        humanPrompt = `Provide a short, strategic insight (2 sentences) for this project: "${prompt}"`;
-      } else if (detectedMode === 'ad-creative') {
-        systemPrompt = "You are an expert ad creative director.";
-        humanPrompt = `Provide a short, high-conversion insight (2 sentences) for this advertisement request: "${prompt}"`;
-      } else if (detectedMode === 'web') {
-        systemPrompt = "You are a professional web designer.";
-        humanPrompt = `Provide a short, strategic insight (2 sentences) for this layout request: "${prompt}"`;
-      } else if (detectedMode === 'mobile') {
-        systemPrompt = "You are a mobile UI/UX design expert.";
-        humanPrompt = `Provide a short, professional insight (2 sentences) for this mobile app/interface request: "${prompt}"`;
-      } else if (detectedMode === 'desktop') {
-        systemPrompt = "You are a desktop software interface design expert.";
-        humanPrompt = `Provide a short, strategic insight (2 sentences) for this application layout request: "${prompt}"`;
-      } else if (detectedMode === 'graphics') {
-        systemPrompt = "You are a graphic design expert.";
-        humanPrompt = `Provide a short, professional insight (2 sentences) for this graphic request: "${prompt}"`;
-      } else if (detectedMode === 'posters') {
-        systemPrompt = "You are a professional poster designer.";
-        humanPrompt = `Provide a short, artistic insight (2 sentences) for this poster request: "${prompt}"`;
-      } else if (detectedMode === 'games') {
-        systemPrompt = "You are a game design and development expert.";
-        humanPrompt = `Provide a short, strategic insight (2 sentences) for this game-related request: "${prompt}"`;
-      } else if (detectedMode === 'automotive') {
-        systemPrompt = "You are an automotive and aerospace design expert.";
-        humanPrompt = `Provide a short, technical and inspiring insight (2 sentences) for this vehicle/aircraft concept: "${prompt}"`;
-      } else if (detectedMode === 'dropshipper') {
-        systemPrompt = "You are a dropshipping and e-commerce expert.";
-        humanPrompt = `Provide a short, strategic insight (2 sentences) for this product discovery or marketing request: "${prompt}"`;
-      } else if (detectedMode === 'telecoms') {
-        systemPrompt = "You are a telecommunications infrastructure and network expert.";
-        humanPrompt = `Provide a short, technical and strategic insight (2 sentences) for this request: "${prompt}"`;
-      } else if (detectedMode === 'medias') {
-        systemPrompt = "You are a media production and broadcasting expert.";
-        humanPrompt = `Provide a short, professional insight (2 sentences) for this request: "${prompt}"`;
-      } else if (detectedMode === 'social-networks') {
-        systemPrompt = "You are a social media strategist and content creator.";
-        humanPrompt = `Provide a short, high-engagement insight (2 sentences) for this request: "${prompt}"`;
-      } else if (detectedMode === 'github') {
-        systemPrompt = "You are a GitHub ecosystem and open source expert.";
-        humanPrompt = `Provide a short, professional insight (2 sentences) for this GitHub Pages or repository request: "${prompt}"`;
-      } else if (detectedMode === 'sports') {
-        systemPrompt = "You are a sports branding and performance analytics expert.";
-        humanPrompt = `Provide a short, professional insight (2 sentences) for this sports-related request: "${prompt}"`;
-      } else if (detectedMode === 'health') {
-        systemPrompt = "You are a medical interface and healthcare design expert.";
-        humanPrompt = `Provide a short, professional and precise insight (2 sentences) for this health-related request: "${prompt}"`;
-      } else if (detectedMode === 'finance') {
-        systemPrompt = "You are a finance AI expert for banks, insurance, VC, fintechs, and mobile operators.";
-        humanPrompt = `Provide a short, professional and strategic marketing/product insight (2 sentences) for this request: "${prompt}"`;
-      } else if (detectedMode === 'art-ai') {
-        systemPrompt = "You are a professional AI artist and digital painter.";
-        humanPrompt = `Provide a short, inspiring insight (2 sentences) about the artistic style and technique for this request: "${prompt}"`;
-      } else if (detectedMode === 'education') {
-        systemPrompt = "You are a global education and ed-tech expert.";
-        humanPrompt = `Provide a short, professional and strategic insight (2 sentences) for this educational design or content request: "${prompt}"`;
-      } else if (detectedMode === 'maps') {
-        systemPrompt = "You are a geographic design and cartography expert.";
-        humanPrompt = `Provide a short, professional insight (2 sentences) for this map-related design request: "${prompt}"`;
-      } else if (detectedMode === 'ai-projects') {
-        systemPrompt = "You are an AI projects and systems development expert.";
-        humanPrompt = `Provide a short, strategic technical insight (2 sentences) for this AI project request: "${prompt}"`;
-      } else if (detectedMode === 'web3') {
-        systemPrompt = "You are a Web3 and blockchain development expert.";
-        humanPrompt = `Provide a short, professional insight (2 sentences) for this decentralized application or Web3 request: "${prompt}"`;
-      } else if (detectedMode === 'ml-tools') {
-        systemPrompt = "You are a machine learning and data science tools expert.";
-        humanPrompt = `Provide a short, professional insight (2 sentences) for this ML tool or data task: "${prompt}"`;
-      }
-
-      // Simulated RAG Logic
-      let context = "";
-      if (useRAG && supabase) {
+      if (provider === 'aws' && isAwsConfigured) {
         try {
-          // In a real RAG implementation, you would:
-          // 1. Generate an embedding for the prompt
-          // 2. Query Supabase vector store
-          // 3. Append context to the human prompt
-
-          // For this simulation, we'll try to fetch some relevant context if a 'documents' table exists
-          const { data, error } = await supabase
-            .from('documents')
-            .select('content')
-            .limit(1);
-
-          if (data && data.length > 0) {
-            context = `\n\nContext from knowledge base: ${data[0].content}`;
-          }
-        } catch (ragError) {
-          console.error('RAG Error:', ragError);
-          // Continue without RAG context if it fails
+          const params = {
+            modelId: "amazon.titan-text-express-v1",
+            contentType: "application/json",
+            accept: "application/json",
+            body: JSON.stringify({
+              inputText: `System: ${systemPrompt}\nHuman: ${humanPrompt}${context}\nAssistant:`,
+              textGenerationConfig: {
+                maxTokenCount: 100,
+                stopSequences: [],
+                temperature: 0.7,
+                topP: 0.9
+              }
+            })
+          };
+          const command = new InvokeModelCommand(params);
+          const response = await bedrockClient.send(command);
+          const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+          insightContent = responseBody.results[0].outputText;
+        } catch (e) {
+          console.error('AWS Bedrock text generation failed:', e.message);
+          insightContent = `AWS Design Insight: Focus on scalability and performance for your ${detectedMode} project.`;
         }
+      } else {
+        let chatModel;
+        if (provider === 'claude') {
+          chatModel = claudeModel;
+        } else if (provider === 'openrouter') {
+          chatModel = openRouterModel;
+        } else if (provider === 'openai' || fineTunedModel) {
+          chatModel = new ChatOpenAI({
+            openAIApiKey: process.env.OPENAI_API_KEY || 'dummy_key',
+            modelName: fineTunedModel || 'gpt-3.5-turbo'
+          });
+        } else {
+          chatModel = googleModel;
+        }
+
+        // Automatically use fine-tuned model if available and in smart mode
+        if (mode === 'smart' && fineTunedModel) {
+          chatModel = new ChatOpenAI({
+            openAIApiKey: process.env.OPENAI_API_KEY || 'dummy_key',
+            modelName: fineTunedModel
+          });
+        }
+
+        const response = await chatModel.invoke([
+          new SystemMessage(systemPrompt),
+          new HumanMessage(humanPrompt + context),
+        ]);
+        insightContent = response.content;
       }
 
-      const response = await chatModel.invoke([
-        new SystemMessage(systemPrompt),
-        new HumanMessage(humanPrompt + context),
-      ]);
-      insight = response.content;
+      insight = insightContent;
     } else {
       insight = `Simulated insight for ${mode}: Great choice! This will look amazing.`;
     }

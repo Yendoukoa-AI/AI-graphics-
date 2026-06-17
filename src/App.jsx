@@ -1220,6 +1220,7 @@ function App() {
                         <option value="langflow">LangFlow</option>
                         <option value="ml-tools">ML Tools</option>
                         <option value="ai-projects">AI Projects</option>
+                        <option value="aws">AWS Cloud AI</option>
                         <option value="web3">Web3</option>
                         <option value="finetuning">Fine Tuning</option>
                         <option value="maps">Maps AI</option>
@@ -1235,6 +1236,7 @@ function App() {
                     >
                       <option value="google">Google Gemini</option>
                       <option value="claude">Anthropic Claude</option>
+                      <option value="aws">AWS Bedrock</option>
                       <option value="openrouter">OpenRouter</option>
                       <option value="openai">OpenAI (DALL-E)</option>
                       <option value="huggingface">Hugging Face</option>
@@ -1467,6 +1469,7 @@ function App() {
                 mode === 'education' ? "e.g., Interactive math lesson for kids or global history curriculum layout" :
                 mode === 'github' ? "e.g., Personal portfolio for GitHub Pages or documentation site" :
                 mode === 'ai-projects' ? "e.g., Architecture for a real-time recommendation engine" :
+                mode === 'aws' ? "e.g., AWS architecture diagram for a scalable web app" :
                 mode === 'web3' ? "e.g., Smart contract for a decentralized voting system" :
                 mode === 'ml-tools' ? `e.g., Enter text to ${mlTask === 'summarization' ? 'summarize' : mlTask === 'sentiment-analysis' ? 'analyze sentiment' : 'translate'}` :
                 "e.g., Describe your creative vision..."
