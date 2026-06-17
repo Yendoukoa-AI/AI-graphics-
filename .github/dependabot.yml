@@ -1,4 +1,4 @@
-# Dependabot configuration for DesignAI Studio
+# Dependabot configuration for Global DesignAI Studio
 version: 2
 updates:
   - package-ecosystem: "npm"

@@ -2,9 +2,9 @@ import { expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders DesignAI Studio logo', () => {
+test('renders Global DesignAI Studio logo', () => {
   render(<App />);
-  const logoElements = screen.getAllByText(/DesignAI Studio/i);
+  const logoElements = screen.getAllByText(/Global DesignAI Studio/i);
   expect(logoElements.length).toBeGreaterThan(0);
 });
 
@@ -20,9 +20,9 @@ test('renders Ad Creative AI feature card', () => {
   expect(featureElement).toBeDefined();
 });
 
-test('renders Ads mode option', () => {
+test('renders Global Ads mode option', () => {
   render(<App />);
-  const modeOption = screen.getByText(/^Ads$/i);
+  const modeOption = screen.getByText(/Global Ads/i);
   expect(modeOption).toBeDefined();
 });
 
@@ -62,9 +62,9 @@ test('renders Finance AI feature card', () => {
   expect(featureElements.length).toBeGreaterThan(0);
 });
 
-test('renders Finance mode option', () => {
+test('renders Global Finance mode option', () => {
   render(<App />);
-  const modeOptions = screen.getAllByText(/finance/i);
+  const modeOptions = screen.getAllByText(/Global Finance/i);
   expect(modeOptions.length).toBeGreaterThan(0);
 });
 
@@ -74,8 +74,8 @@ test('renders Art AI Painter feature card', () => {
   expect(featureElements.length).toBeGreaterThan(0);
 });
 
-test('renders Art AI mode option', () => {
+test('renders Global Art AI mode option', () => {
   render(<App />);
-  const modeOptions = screen.getAllByText(/Art AI Painter/i);
+  const modeOptions = screen.getAllByText(/Global Art AI Painter/i);
   expect(modeOptions.length).toBeGreaterThan(0);
 });

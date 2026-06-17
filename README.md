@@ -1,10 +1,10 @@
-# DesignAI Studio
+# Global DesignAI Studio
 
-DesignAI Studio is an AI-powered design platform dedicated to the modern creator. It leverages artificial intelligence to revolutionize workflows in web design, graphic design, Photoshop enhancements, and poster creation.
+Global DesignAI Studio is an AI-powered design platform dedicated to the modern creator. It leverages artificial intelligence to revolutionize workflows in web design, graphic design, Photoshop enhancements, and poster creation.
 
 ## 📢 Latest News: Super Release v1.2.0 is Here!
 
-We are excited to announce our super release! **DesignAI Studio v1.2.0** is now live with enhanced authentication.
+We are excited to announce our super release! **Global DesignAI Studio v1.2.0** is now live with enhanced authentication.
 
 - **View on GitHub Session**: [v1.2.0](https://github.com/GYFX35/AI-graphics-/releases/tag/v1.2.0)
 - **Artifact**: [Download release-v1.2.0.tar.gz](https://github.com/GYFX35/AI-graphics-/releases/download/v1.2.0/release-v1.2.0.tar.gz)

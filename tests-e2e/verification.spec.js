@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 
-test('verify new UI elements in DesignAI Studio', async ({ page }) => {
+test('verify new UI elements in Global DesignAI Studio', async ({ page }) => {
   await page.goto('http://localhost:3000');
 
   // Check for the new mode button

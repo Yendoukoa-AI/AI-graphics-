@@ -207,8 +207,8 @@ const sendWelcomeEmail = async (email, displayName) => {
   const mailOptions = {
     from: process.env.GMAIL_USER,
     to: email,
-    subject: 'Welcome to DesignAI Studio!',
-    text: `Hi ${displayName},\n\nWelcome to DesignAI Studio! We're excited to have you on board.\n\nBest regards,\nThe DesignAI Team`
+    subject: 'Welcome to Global DesignAI Studio!',
+    text: `Hi ${displayName},\n\nWelcome to Global DesignAI Studio! We're excited to have you on board.\n\nBest regards,\nThe Global DesignAI Team`
   };
 
   try {
@@ -217,8 +217,8 @@ const sendWelcomeEmail = async (email, displayName) => {
         Source: process.env.AWS_SES_FROM_EMAIL,
         Destination: { ToAddresses: [email] },
         Message: {
-          Subject: { Data: 'Welcome to DesignAI Studio!' },
-          Body: { Text: { Data: `Hi ${displayName},\n\nWelcome to DesignAI Studio! We're excited to have you on board.\n\nBest regards,\nThe DesignAI Team` } }
+          Subject: { Data: 'Welcome to Global DesignAI Studio!' },
+          Body: { Text: { Data: `Hi ${displayName},\n\nWelcome to Global DesignAI Studio! We're excited to have you on board.\n\nBest regards,\nThe Global DesignAI Team` } }
         }
       });
       await sesClient.send(command);
@@ -296,7 +296,7 @@ const openRouterModel = new ChatOpenAI({
     baseURL: "https://openrouter.ai/api/v1",
     defaultHeaders: {
       "HTTP-Referer": process.env.FRONTEND_URL || 'http://localhost:3000',
-      "X-Title": "DesignAI Studio",
+      "X-Title": "Global DesignAI Studio",
     }
   }
 });
@@ -362,7 +362,18 @@ app.post('/api/generate', async (req, res) => {
     else if (lowerPrompt.includes('finance') || lowerPrompt.includes('bank') || lowerPrompt.includes('money')) detectedMode = 'finance';
     else if (lowerPrompt.includes('education') || lowerPrompt.includes('learn') || lowerPrompt.includes('school')) detectedMode = 'education';
     else if (lowerPrompt.includes('sport') || lowerPrompt.includes('football') || lowerPrompt.includes('fitness')) detectedMode = 'sports';
+    else if (lowerPrompt.includes('health') || lowerPrompt.includes('medical') || lowerPrompt.includes('doctor')) detectedMode = 'health';
     else if (lowerPrompt.includes('aws') || lowerPrompt.includes('cloud') || lowerPrompt.includes('amazon')) detectedMode = 'aws';
+    else if (lowerPrompt.includes('entertainment') || lowerPrompt.includes('movie studio') || lowerPrompt.includes('production house')) detectedMode = 'entertainment';
+    else if (lowerPrompt.includes('ad') || lowerPrompt.includes('creative') || lowerPrompt.includes('marketing')) detectedMode = 'ad-creative';
+    else if (lowerPrompt.includes('car') || lowerPrompt.includes('automotive') || lowerPrompt.includes('aero')) detectedMode = 'automotive';
+    else if (lowerPrompt.includes('dropship') || lowerPrompt.includes('inventory')) detectedMode = 'dropshipper';
+    else if (lowerPrompt.includes('telecom') || lowerPrompt.includes('network') || lowerPrompt.includes('5g')) detectedMode = 'telecoms';
+    else if (lowerPrompt.includes('broadcast') || lowerPrompt.includes('media') || lowerPrompt.includes('news')) detectedMode = 'medias';
+    else if (lowerPrompt.includes('social') || lowerPrompt.includes('instagram') || lowerPrompt.includes('facebook') || lowerPrompt.includes('twitter')) detectedMode = 'social-networks';
+    else if (lowerPrompt.includes('art') || lowerPrompt.includes('paint') || lowerPrompt.includes('brush')) detectedMode = 'art-ai';
+    else if (lowerPrompt.includes('web3') || lowerPrompt.includes('crypto') || lowerPrompt.includes('blockchain') || lowerPrompt.includes('nft')) detectedMode = 'web3';
+    else if (lowerPrompt.includes('project') || lowerPrompt.includes('system') || lowerPrompt.includes('architecture')) detectedMode = 'ai-projects';
     else detectedMode = 'web'; // Default to web if unsure
   }
 
@@ -526,10 +537,10 @@ app.post('/api/generate', async (req, res) => {
       systemPrompt = "You are a geographic design and cartography expert.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this map-related design request: "${prompt}"`;
     } else if (detectedMode === 'ai-projects') {
-      systemPrompt = "You are an AI projects and systems development expert.";
+      systemPrompt = "You are an AI projects and systems development expert focused on AI projects development.";
       humanPrompt = `Provide a short, strategic technical insight (2 sentences) for this AI project request: "${prompt}"`;
     } else if (detectedMode === 'web3') {
-      systemPrompt = "You are a Web3 and blockchain development expert.";
+      systemPrompt = "You are a Web3 and blockchain development expert specialized in web3 social networking.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this decentralized application or Web3 request: "${prompt}"`;
     } else if (detectedMode === 'aws') {
       systemPrompt = "You are an AWS Cloud Architect and AI expert.";
@@ -761,7 +772,7 @@ app.post('/auth/forgot-password', async (req, res) => {
       const mailOptions = {
         from: process.env.GMAIL_USER,
         to: email,
-        subject: 'Password Reset - DesignAI Studio',
+        subject: 'Password Reset - Global DesignAI Studio',
         text: `You requested a password reset. Click here to reset your password: ${resetUrl}\n\nIf you didn't request this, ignore this email.`
       };
 
@@ -877,7 +888,7 @@ app.post('/api/github/deploy', async (req, res) => {
     const repoName = `design-ai-${Date.now()}`;
     const { data: repo } = await octokit.rest.repos.createForAuthenticatedUser({
       name: repoName,
-      description: `Generated by DesignAI Studio: ${prompt}`,
+      description: `Generated by Global DesignAI Studio: ${prompt}`,
       auto_init: true,
     });
 
@@ -886,7 +897,7 @@ app.post('/api/github/deploy', async (req, res) => {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>DesignAI - ${mode}</title>
+    <title>Global DesignAI - ${mode}</title>
     <style>
         body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; color: white; }
         .container { text-align: center; border: 1px solid #1e293b; padding: 2rem; border-radius: 1rem; background: rgba(30, 41, 59, 0.5); }
@@ -905,7 +916,7 @@ app.post('/api/github/deploy', async (req, res) => {
       owner: repo.owner.login,
       repo: repoName,
       path: 'index.html',
-      message: 'Initial commit from DesignAI Studio',
+      message: 'Initial commit from Global DesignAI Studio',
       content: Buffer.from(content).toString('base64'),
     });
 

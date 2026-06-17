@@ -252,8 +252,8 @@ function App() {
 
   const handleShare = async () => {
     const shareData = {
-      title: 'DesignAI Studio Generation',
-      text: `Check out this ${mode} I generated with DesignAI Studio: ${prompt}`,
+      title: 'Global DesignAI Studio Generation',
+      text: `Check out this ${mode} I generated with Global DesignAI Studio: ${prompt}`,
       url: previewVideo || previewImage || window.location.href,
     };
 
@@ -274,7 +274,7 @@ function App() {
       window.FB.ui({
         method: 'share',
         href: previewVideo || previewImage || window.location.href,
-        quote: `Check out this ${mode} I generated with DesignAI Studio: ${prompt}`,
+        quote: `Check out this ${mode} I generated with Global DesignAI Studio: ${prompt}`,
       }, function(response){});
     } else {
       const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewVideo || previewImage || window.location.href)}`;
@@ -766,7 +766,7 @@ function App() {
         </div>
       )}
       <nav className="navbar">
-        <div className="logo">DesignAI Studio</div>
+        <div className="logo">Global DesignAI Studio</div>
         <div className="nav-links">
           <a href="#features">Features</a>
           <a href="#editor">Editor</a>
@@ -1048,7 +1048,7 @@ function App() {
       <section id="sponsorship" className="sponsorship">
         <div className="sponsorship-content">
           <h2>Support Our Mission</h2>
-          <p>Help us keep DesignAI Studio free and open for everyone. Your sponsorship fuels the development of better AI models and more features.</p>
+          <p>Help us keep Global DesignAI Studio free and open for everyone. Your sponsorship fuels the development of better AI models and more features.</p>
           <div className="sponsorship-stats">
             <div className="stat">
               <span className="stat-value">500+</span>
@@ -1204,26 +1204,34 @@ function App() {
                         <option value="posters">Posters</option>
                       </optgroup>
                       <optgroup label="Creative AI">
-                        <option value="cinema">Cinema</option>
-                        <option value="music">Music</option>
-                        <option value="art-ai">Art AI Painter</option>
+                        <option value="cinema">Global Cinema</option>
+                        <option value="music">Global Music</option>
+                        <option value="art-ai">Global Art AI Painter</option>
+                        <option value="entertainment">Global Entertainment</option>
+                        <option value="medias">Global Medias AI</option>
                       </optgroup>
                       <optgroup label="Business & Tech">
-                        <option value="ad-creative">Ads</option>
-                        <option value="shopline">Shopline</option>
-                        <option value="dropshipper">Dropshipper</option>
-                        <option value="finance">Finance</option>
-                        <option value="telecoms">Telecoms</option>
+                        <option value="ad-creative">Global Ads</option>
+                        <option value="shopline">Global Shopline</option>
+                        <option value="dropshipper">Global Dropshipper</option>
+                        <option value="finance">Global Finance</option>
+                        <option value="telecoms">Global Telecoms</option>
+                      </optgroup>
+                      <optgroup label="Global Sectors">
+                        <option value="sports">Global Sports AI</option>
+                        <option value="health">Global Health AI</option>
+                        <option value="education">Global Education AI</option>
+                        <option value="social-networks">Global Social Networks AI</option>
                       </optgroup>
                       <optgroup label="Advanced Tools">
-                        <option value="github">GitHub Session</option>
-                        <option value="langflow">LangFlow</option>
-                        <option value="ml-tools">ML Tools</option>
-                        <option value="ai-projects">AI Projects</option>
-                        <option value="aws">AWS Cloud AI</option>
-                        <option value="web3">Web3</option>
-                        <option value="finetuning">Fine Tuning</option>
-                        <option value="maps">Maps AI</option>
+                        <option value="github">Global GitHub Session</option>
+                        <option value="langflow">Global LangFlow</option>
+                        <option value="ml-tools">Global ML Tools</option>
+                        <option value="ai-projects">Global AI Projects</option>
+                        <option value="aws">Global AWS Cloud AI</option>
+                        <option value="web3">Global Web3</option>
+                        <option value="finetuning">Global Fine Tuning</option>
+                        <option value="maps">Global Maps AI</option>
                       </optgroup>
                     </select>
                   </div>
@@ -1715,7 +1723,7 @@ function App() {
       </section>
 
       <footer>
-        <p>&copy; 2026 DesignAI Studio. Empowering creators through artificial intelligence.</p>
+        <p>&copy; 2026 Global DesignAI Studio. Empowering creators through artificial intelligence.</p>
       </footer>
     </div>
   );

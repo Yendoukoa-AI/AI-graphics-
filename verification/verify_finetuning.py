@@ -3,11 +3,11 @@ import time
 import os
 
 def verify_finetuning_ui(page: Page):
-    # 1. Arrange: Go to the DesignAI Studio page
+    # 1. Arrange: Go to the Global DesignAI Studio page
     page.goto("http://localhost:3000")
 
     # Wait for the page to load
-    page.wait_for_selector("text=DesignAI Studio")
+    page.wait_for_selector("text=Global DesignAI Studio")
 
     # 2. Act: Click on the "Fine Tuning" mode button
     finetuning_btn = page.locator('button.mode-btn.enhancement:has-text("Fine Tuning")')

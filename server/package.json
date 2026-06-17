@@ -1,7 +1,7 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "Backend for DesignAI Studio",
+  "description": "Backend for Global DesignAI Studio",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
