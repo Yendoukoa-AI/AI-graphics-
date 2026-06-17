@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { translations } from './translations';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
@@ -68,6 +69,9 @@ function App() {
   const [isFinetuningLoading, setIsFinetuningLoading] = useState(false);
   const [resetToken, setResetToken] = useState(null);
   const [newPassword, setNewPassword] = useState('');
+  const [language, setLanguage] = useState('en');
+
+  const t = (key) => translations[language][key] || translations['en'][key];
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -665,22 +669,22 @@ function App() {
   };
 
   return (
-    <div className="App">
+    <div className="App" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {showAuthModal && (
         <div className="modal-overlay">
           <div className="auth-modal">
             <button className="close-modal" onClick={() => setShowAuthModal(false)}>✕</button>
             <h3>
-              {authMode === 'login' ? 'Login to DesignAI' :
-               authMode === 'register' ? 'Create Account' :
-               authMode === 'forgot-password' ? 'Forgot Password' : 'Reset Password'}
+              {authMode === 'login' ? t('login_register') :
+               authMode === 'register' ? t('register_btn') :
+               authMode === 'forgot-password' ? t('forgot_password') : t('reset_password')}
             </h3>
             {authError && <p className="auth-error-msg">{authError}</p>}
             {authMessage && <p className="auth-success-msg" style={{ color: '#10b981', marginBottom: '1rem', textAlign: 'center' }}>{authMessage}</p>}
             <form onSubmit={handleAuth}>
               {authMode === 'register' && (
                 <div className="input-field-group">
-                  <label>Display Name</label>
+                  <label>{t('display_name')}</label>
                   <input
                     type="text"
                     value={displayName}
@@ -692,7 +696,7 @@ function App() {
               )}
               {(authMode === 'login' || authMode === 'register' || authMode === 'forgot-password' || authMode === 'reset-password') && (
                 <div className="input-field-group">
-                  <label>Email Address</label>
+                  <label>{t('email_address')}</label>
                   <input
                     type="email"
                     value={email}
@@ -705,7 +709,7 @@ function App() {
               )}
               {(authMode === 'login' || authMode === 'register') && (
                 <div className="input-field-group">
-                  <label>Password</label>
+                  <label>{t('password')}</label>
                   <input
                     type="password"
                     value={password}
@@ -717,18 +721,18 @@ function App() {
               )}
               {(authMode === 'login' || authMode === 'register') && (
                 <button type="submit" className="cta-button auth-submit">
-                  {authMode === 'login' ? 'Login' : 'Register'}
+                  {authMode === 'login' ? t('login_btn') : t('register_btn')}
                 </button>
               )}
               {authMode === 'forgot-password' && (
                 <button type="submit" className="cta-button auth-submit">
-                  Send Reset Link
+                  {t('send_reset')}
                 </button>
               )}
               {authMode === 'reset-password' && (
                 <>
                   <div className="input-field-group">
-                    <label>New Password</label>
+                    <label>{t('new_password')}</label>
                     <input
                       type="password"
                       value={newPassword}
@@ -738,7 +742,7 @@ function App() {
                     />
                   </div>
                   <button type="submit" className="cta-button auth-submit">
-                    Reset Password
+                    {t('reset_password')}
                   </button>
                 </>
               )}
@@ -746,42 +750,54 @@ function App() {
             <div className="auth-switch">
               {authMode === 'login' ? (
                 <>
-                  <p>Don't have an account? <button onClick={() => setAuthMode('register')}>Register</button></p>
-                  <p><button onClick={() => setAuthMode('forgot-password')}>Forgot password?</button></p>
+                  <p>{t('no_account')} <button onClick={() => setAuthMode('register')}>{t('register_btn')}</button></p>
+                  <p><button onClick={() => setAuthMode('forgot-password')}>{t('forgot_password')}</button></p>
                 </>
               ) : authMode === 'register' ? (
-                <p>Already have an account? <button onClick={() => setAuthMode('login')}>Login</button></p>
+                <p>{t('already_account')} <button onClick={() => setAuthMode('login')}>{t('login_btn')}</button></p>
               ) : (
-                <p><button onClick={() => setAuthMode('login')}>Back to Login</button></p>
+                <p><button onClick={() => setAuthMode('login')}>{t('back_login')}</button></p>
               )}
             </div>
             <div className="auth-divider">
-              <span>OR</span>
+              <span>{t('or')}</span>
             </div>
             <div className="social-auth-options">
-              <a href={`${API_URL}/auth/google`} className="social-auth-btn google">Continue with Google</a>
-              <a href={`${API_URL}/auth/facebook`} className="social-auth-btn facebook">Continue with Facebook</a>
+              <a href={`${API_URL}/auth/google`} className="social-auth-btn google">{t('continue_google')}</a>
+              <a href={`${API_URL}/auth/facebook`} className="social-auth-btn facebook">{t('continue_facebook')}</a>
             </div>
           </div>
         </div>
       )}
       <nav className="navbar">
-        <div className="logo">DesignAI Studio</div>
+        <div className="logo">{t('logo_text')}</div>
         <div className="nav-links">
-          <a href="#features">Features</a>
-          <a href="#editor">Editor</a>
-          <a href="#pricing">Pricing</a>
-          <a href="#showcase">Showcase</a>
-          <a href="https://github.com/GYFX35/AI-graphics-/releases" target="_blank" rel="noopener noreferrer">View on GitHub Session</a>
+          <a href="#features">{t('features')}</a>
+          <a href="#editor">{t('editor')}</a>
+          <a href="#pricing">{t('pricing')}</a>
+          <a href="#showcase">{t('showcase')}</a>
+          <a href="https://github.com/GYFX35/AI-graphics-/releases" target="_blank" rel="noopener noreferrer">{t('github_session')}</a>
         </div>
         <div className="nav-actions">
-          <button className="sponsor-button">Sponsor</button>
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="language-selector"
+          >
+            <option value="en">{t('lang_en')}</option>
+            <option value="fr">{t('lang_fr')}</option>
+            <option value="es">{t('lang_es')}</option>
+            <option value="zh">{t('lang_zh')}</option>
+            <option value="ja">{t('lang_ja')}</option>
+            <option value="ar">{t('lang_ar')}</option>
+          </select>
+          <button className="sponsor-button">{t('sponsor')}</button>
           {user ? (
             <div className="user-profile">
               <img src={user.photos?.[0]?.value || `https://ui-avatars.com/api/?name=${user.displayName}`} alt={user.displayName} className="user-avatar" />
               <div className="user-dropdown">
                 <span>{user.displayName}</span>
-                <a href={`${API_URL}/auth/logout`} className="logout-link">Logout</a>
+                <a href={`${API_URL}/auth/logout`} className="logout-link">{t('logout')}</a>
               </div>
             </div>
           ) : (
@@ -790,10 +806,10 @@ function App() {
                 className="cta-button login-btn email"
                 onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
               >
-                Login / Register
+                {t('login_register')}
               </button>
-              <a href={`${API_URL}/auth/google`} className="cta-button login-btn google">Google</a>
-              <a href={`${API_URL}/auth/facebook`} className="cta-button login-btn facebook">Facebook</a>
+              <a href={`${API_URL}/auth/google`} className="cta-button login-btn google">{t('continue_google')}</a>
+              <a href={`${API_URL}/auth/facebook`} className="cta-button login-btn facebook">{t('continue_facebook')}</a>
             </div>
           )}
         </div>
@@ -803,36 +819,36 @@ function App() {
         {!user && (
           <div className="auth-nudge">
             <span className="nudge-icon">🔒</span>
-            <span>Connect with Google to unlock persistent design storage and history.</span>
-            <a href={`${API_URL}/auth/google`} className="nudge-link">Connect Now</a>
+            <span>{t('connect_google_nudge')}</span>
+            <a href={`${API_URL}/auth/google`} className="nudge-link">{t('connect_now')}</a>
           </div>
         )}
-        <div className="hero-badge">The Ultimate AI Creative Suite 🌐 🎨 🖼️</div>
-        <h1>Professional AI Design <br />for Modern Creators</h1>
-        <p>Generate responsive web layouts, professional graphics, and stunning posters instantly. Now featuring enhanced Cinematography and Music AI capabilities.</p>
+        <div className="hero-badge">{t('hero_badge')}</div>
+        <h1>{t('hero_title_1')} <br /> {t('hero_title_2')}</h1>
+        <p>{t('hero_subtitle')}</p>
         <div className="hero-actions">
-          <button className="cta-button">Try for Free</button>
-          <a href="#editor" className="secondary-button" style={{ textDecoration: 'none', display: 'inline-block' }}>Watch Demo</a>
+          <button className="cta-button">{t('try_free')}</button>
+          <a href="#editor" className="secondary-button" style={{ textDecoration: 'none', display: 'inline-block' }}>{t('watch_demo')}</a>
         </div>
       </header>
 
       <section className="how-it-works">
-        <h2>How it Works</h2>
+        <h2>{t('how_it_works')}</h2>
         <div className="steps-grid">
           <div className="step">
             <div className="step-number">1</div>
-            <h4>Choose Mode</h4>
-            <p>Select between Web Design, Graphics, Posters, or advanced AI Enhancement modes.</p>
+            <h4>{t('step_1_title')}</h4>
+            <p>{t('step_1_desc')}</p>
           </div>
           <div className="step">
             <div className="step-number">2</div>
-            <h4>Describe</h4>
-            <p>Enter a simple text prompt describing your vision.</p>
+            <h4>{t('step_2_title')}</h4>
+            <p>{t('step_2_desc')}</p>
           </div>
           <div className="step">
             <div className="step-number">3</div>
-            <h4>Refine</h4>
-            <p>Use AI insights to perfect your creation instantly.</p>
+            <h4>{t('step_3_title')}</h4>
+            <p>{t('step_3_desc')}</p>
           </div>
         </div>
       </section>
@@ -849,230 +865,230 @@ function App() {
 
       <section id="features" className="features">
         <div className="card">
+          <span className="card-icon">🖼️</span>
+          <h3>{t('posters_feature_title')}</h3>
+          <p>{t('posters_feature_desc')}</p>
+        </div>
+        <div className="card">
           <span className="card-icon">🌐</span>
-          <h3>Web Design AI</h3>
-          <p>Generate responsive layouts, UI components, and complete landing pages from simple text descriptions.</p>
+          <h3>{t('web_design_title')}</h3>
+          <p>{t('web_design_desc')}</p>
         </div>
         <div className="card">
           <span className="card-icon">📱</span>
-          <h3>Mobile Design AI</h3>
-          <p>Create stunning mobile app interfaces, touch-optimized components, and adaptive mobile web layouts.</p>
+          <h3>{t('mobile_design_title')}</h3>
+          <p>{t('mobile_design_desc')}</p>
         </div>
         <div className="card">
           <span className="card-icon">💻</span>
-          <h3>Desktop App AI</h3>
-          <p>Design professional desktop application interfaces, complex dashboards, and multi-window software layouts.</p>
+          <h3>{t('desktop_design_title')}</h3>
+          <p>{t('desktop_design_desc')}</p>
         </div>
         <div className="card">
           <span className="card-icon">🎨</span>
-          <h3>Graphic & Photoshop</h3>
-          <p>Advanced AI tools for image manipulation, background removal, and professional photo retouching.</p>
-        </div>
-        <div className="card">
-          <span className="card-icon">🖼️</span>
-          <h3>Affiches & Posters</h3>
-          <p>Create stunning public posters and advertisements with automated typography and layout balancing.</p>
+          <h3>{t('graphics_design_title')}</h3>
+          <p>{t('graphics_design_desc')}</p>
         </div>
         <div className="card">
           <span className="card-icon">⚡</span>
-          <h3>Real-time Generation</h3>
-          <p>Experience the power of AI with our integrated editor and see your ideas come to life instantly.</p>
+          <h3>{t('realtime_gen_title')}</h3>
+          <p>{t('realtime_gen_desc')}</p>
         </div>
       </section>
 
       <section className="enhancements-section">
         <div className="section-header">
-          <h2>AI Enhancements</h2>
-          <p>Specialized tools to expand your creative horizons</p>
+          <h2>{t('ai_enhancements')}</h2>
+          <p>{t('ai_enhancements_subtitle')}</p>
         </div>
         <div className="features enhancements-grid">
           <div className="card enhancement-card">
             <span className="card-icon">🎥</span>
-            <h3>Cinematography AI</h3>
-            <p>Generate storyboards, shot compositions, and cinematic lighting schemes for global productions.</p>
+            <h3>{t('cinema_ai_title')}</h3>
+            <p>{t('cinema_ai_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">🎵</span>
-            <h3>Music & Audio AI</h3>
-            <p>Compose original scores, generate soundscapes, and master audio tracks for any project.</p>
+            <h3>{t('music_ai_title')}</h3>
+            <p>{t('music_ai_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">🌎</span>
-            <h3>Global Entertainment</h3>
-            <p>End-to-end AI tools for film, music, and digital media production tailored for a global audience.</p>
+            <h3>{t('global_ent_title')}</h3>
+            <p>{t('global_ent_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">📢</span>
-            <h3>Ad Creative AI</h3>
-            <p>Generate high-converting ad visuals and copy for social media, search, and display campaigns.</p>
+            <h3>{t('ad_creative_title')}</h3>
+            <p>{t('ad_creative_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">🎮</span>
-            <h3>Games Design & Dev</h3>
-            <p>Design game characters, environments, and core mechanics with specialized AI assistance.</p>
+            <h3>{t('games_design_title')}</h3>
+            <p>{t('games_design_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">🏎️</span>
-            <h3>Automotive & Aero</h3>
-            <p>Conceptualize next-generation cars, vehicles, and aircraft with advanced aerodynamic AI modeling.</p>
+            <h3>{t('automotive_title')}</h3>
+            <p>{t('automotive_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">📦</span>
-            <h3>AI Dropshipper</h3>
-            <p>Discover trending products, generate marketing strategies, and boost e-commerce visibility with AI.</p>
+            <h3>{t('dropshipper_title')}</h3>
+            <p>{t('dropshipper_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">📡</span>
-            <h3>Telecoms AI</h3>
-            <p>Optimize network layouts, visualize signal coverage, and design telecommunication infrastructure.</p>
+            <h3>{t('telecoms_title')}</h3>
+            <p>{t('telecoms_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">📺</span>
-            <h3>Medias AI</h3>
-            <p>Generate broadcast graphics, news layouts, and multimedia content for digital broadcasting.</p>
+            <h3>{t('medias_title')}</h3>
+            <p>{t('medias_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">📱</span>
-            <h3>Social Networks AI</h3>
-            <p>Create viral content, profile aesthetics, and engaging social media campaign assets.</p>
+            <h3>{t('social_networks_title')}</h3>
+            <p>{t('social_networks_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">🏆</span>
-            <h3>Sports AI</h3>
-            <p>Design sports branding, performance analytics dashboards, and global fan engagement assets.</p>
+            <h3>{t('sports_ai_title')}</h3>
+            <p>{t('sports_ai_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">🏥</span>
-            <h3>Health AI</h3>
-            <p>Design medical interfaces, wellness apps, and health monitoring dashboards with AI-driven precision.</p>
+            <h3>{t('health_ai_title')}</h3>
+            <p>{t('health_ai_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">💰</span>
-            <h3>Finance AI</h3>
-            <p>Generate marketing campaigns and product interfaces for banks, insurance, VC, fintechs, and mobile operators.</p>
+            <h3>{t('finance_ai_title')}</h3>
+            <p>{t('finance_ai_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">🖌️</span>
-            <h3>Art AI Painter</h3>
-            <p>Create digital masterpieces, oil paintings, and abstract art with advanced AI brushstroke simulation.</p>
+            <h3>{t('art_ai_title')}</h3>
+            <p>{t('art_ai_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">🎓</span>
-            <h3>Global Education AI</h3>
-            <p>Design interactive learning platforms, educational content, and global classroom experiences with AI.</p>
+            <h3>{t('education_ai_title')}</h3>
+            <p>{t('education_ai_desc')}</p>
           </div>
         <div className="card enhancement-card">
           <span className="card-icon">🗺️</span>
-          <h3>Maps AI</h3>
-          <p>Integrate interactive maps, geolocation features, and geographic data visualization into your designs.</p>
+          <h3>{t('maps_ai_title')}</h3>
+          <p>{t('maps_ai_desc')}</p>
         </div>
           <div className="card enhancement-card">
             <span className="card-icon">🤖</span>
-            <h3>AI Projects</h3>
-            <p>Conceptualize and design complex AI systems, neural network architectures, and data pipelines.</p>
+            <h3>{t('ai_projects_title')}</h3>
+            <p>{t('ai_projects_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">🔗</span>
-            <h3>Web3 AI</h3>
-            <p>Design decentralized applications, smart contracts, and NFT ecosystems with blockchain-focused AI.</p>
+            <h3>{t('web3_ai_title')}</h3>
+            <p>{t('web3_ai_desc')}</p>
           </div>
           <div className="card enhancement-card">
             <span className="card-icon">📊</span>
-            <h3>ML Tools AI</h3>
-            <p>Access global ML tools for text analysis, summarization, and translation directly in your workflow.</p>
+            <h3>{t('ml_tools_title')}</h3>
+            <p>{t('ml_tools_desc')}</p>
           </div>
         </div>
       </section>
 
       <section id="pricing" className="pricing">
-        <h2>Simple, Transparent Pricing</h2>
+        <h2>{t('pricing_title')}</h2>
         <div className="pricing-grid">
           <div className="pricing-card">
-            <h3>Free</h3>
-            <div className="price">$0<span>/month</span></div>
+            <h3>{t('price_free')}</h3>
+            <div className="price">$0<span>{t('price_month')}</span></div>
             <ul>
               <li>5 Generations per month</li>
-              <li>Basic Web Design templates</li>
-              <li>Standard Image Quality</li>
+              <li>{t('price_basic_templates')}</li>
+              <li>{t('price_standard_quality')}</li>
             </ul>
-            <button className="pricing-btn">Start for Free</button>
+            <button className="pricing-btn">{t('start_free')}</button>
           </div>
           <div className="pricing-card popular">
-            <div className="badge">Most Popular</div>
-            <h3>Pro</h3>
-            <div className="price">$29<span>/month</span></div>
+            <div className="badge">{t('most_popular')}</div>
+            <h3>{t('price_pro')}</h3>
+            <div className="price">$29<span>{t('price_month')}</span></div>
             <ul>
-              <li>Unlimited Generations</li>
-              <li>Advanced Photoshop tools</li>
+              <li>{t('price_unlimited_gen')}</li>
+              <li>{t('price_photoshop_tools')}</li>
               <li>HD Export Options</li>
-              <li>Priority Support</li>
+              <li>{t('price_priority_support')}</li>
             </ul>
-            <button className="pricing-btn primary">Upgrade to Pro</button>
+            <button className="pricing-btn primary">{t('upgrade_pro')}</button>
           </div>
           <div className="pricing-card">
-            <h3>Enterprise</h3>
-            <div className="price">Custom</div>
+            <h3>{t('price_enterprise')}</h3>
+            <div className="price">{t('price_custom')}</div>
             <ul>
-              <li>Custom AI training</li>
+              <li>{t('price_custom_training')}</li>
               <li>API Access</li>
-              <li>Team Collaboration</li>
-              <li>Dedicated Manager</li>
+              <li>{t('price_team_collab')}</li>
+              <li>{t('price_dedicated_manager')}</li>
             </ul>
-            <button className="pricing-btn">Contact Sales</button>
+            <button className="pricing-btn">{t('contact_sales')}</button>
           </div>
         </div>
       </section>
 
       <section id="ecommerce" className="ecommerce-partnership">
         <div className="partnership-content">
-          <h2>E-commerce & Dropshipping Partnership</h2>
-          <p>We've partnered with leading global platforms to provide seamless product sourcing and automated dropshipping workflows directly within your creative projects.</p>
+          <h2>{t('partnership_title')}</h2>
+          <p>{t('partnership_desc')}</p>
           <div className="partnership-grid">
             <div className="partner-card">
-              <h4>Global Sourcing</h4>
-              <p>Access millions of products from verified suppliers worldwide.</p>
+              <h4>{t('partnership_sourcing')}</h4>
+              <p>{t('partnership_sourcing_desc')}</p>
             </div>
             <div className="partner-card">
-              <h4>Auto-Fulfillment</h4>
-              <p>Orders are automatically synced and shipped to your customers.</p>
+              <h4>{t('partnership_fulfillment')}</h4>
+              <p>{t('partnership_fulfillment_desc')}</p>
             </div>
             <div className="partner-card">
-              <h4>AI-Driven Sales</h4>
-              <p>Our AI optimizes your product descriptions and visuals for maximum conversion.</p>
+              <h4>{t('partnership_sales')}</h4>
+              <p>{t('partnership_sales_desc')}</p>
             </div>
           </div>
-          <button className="cta-button">Join Partnership Program</button>
+          <button className="cta-button">{t('partnership_btn')}</button>
         </div>
       </section>
 
       <section id="sponsorship" className="sponsorship">
         <div className="sponsorship-content">
-          <h2>Support Our Mission</h2>
-          <p>Help us keep DesignAI Studio free and open for everyone. Your sponsorship fuels the development of better AI models and more features.</p>
+          <h2>{t('sponsorship_title')}</h2>
+          <p>{t('sponsorship_desc')}</p>
           <div className="sponsorship-stats">
             <div className="stat">
               <span className="stat-value">500+</span>
-              <span className="stat-label">Contributors</span>
+              <span className="stat-label">{t('sponsorship_stat_contributors')}</span>
             </div>
             <div className="stat">
               <span className="stat-value">$10k+</span>
-              <span className="stat-label">Raised</span>
+              <span className="stat-label">{t('sponsorship_stat_raised')}</span>
             </div>
           </div>
-          <button className="sponsor-cta">Become a Sponsor</button>
+          <button className="sponsor-cta">{t('sponsorship_btn')}</button>
         </div>
       </section>
 
       <section className="testimonials">
-        <h2>Trusted by Creators</h2>
+        <h2>{t('testimonials_title')}</h2>
         <div className="testimonials-grid">
           <div className="testimonial-card">
             <p>"DesignAI has completely changed how I approach web projects. It's like having a senior designer on speed dial."</p>
             <div className="author">
               <div className="author-avatar">SC</div>
               <div className="author-info">
-                <strong>Sarah Chen</strong>
-                <span>Freelance Web Designer</span>
+                <strong>{t('testimonial_1_name')}</strong>
+                <span>{t('testimonial_1_role')}</span>
               </div>
             </div>
           </div>
@@ -1081,8 +1097,8 @@ function App() {
             <div className="author">
               <div className="author-avatar">MJ</div>
               <div className="author-info">
-                <strong>Marcus Johnson</strong>
-                <span>Art Director</span>
+                <strong>{t('testimonial_2_name')}</strong>
+                <span>{t('testimonial_2_role')}</span>
               </div>
             </div>
           </div>
@@ -1090,85 +1106,85 @@ function App() {
       </section>
 
       <section id="showcase" className="showcase">
-        <h2>Created with DesignAI</h2>
+        <h2>{t('showcase_title')}</h2>
         <div className="showcase-grid">
           <div className="showcase-item">
+            <img src="https://loremflickr.com/400/300/poster,advertisement" alt="Poster" />
+            <div className="showcase-info">{t('showcase_poster')}</div>
+          </div>
+          <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/website,landingpage" alt="Web Design" />
-            <div className="showcase-info">Web Design</div>
+            <div className="showcase-info">{t('showcase_web')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/mobile,app,interface" alt="Mobile Design" />
-            <div className="showcase-info">Mobile Design</div>
+            <div className="showcase-info">{t('showcase_mobile')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/desktop,software,dashboard" alt="Desktop App" />
-            <div className="showcase-info">Desktop App</div>
+            <div className="showcase-info">{t('showcase_desktop')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/photography,retouch" alt="Photoshop" />
-            <div className="showcase-info">Photoshop</div>
-          </div>
-          <div className="showcase-item">
-            <img src="https://loremflickr.com/400/300/poster,advertisement" alt="Poster" />
-            <div className="showcase-info">Poster</div>
+            <div className="showcase-info">{t('showcase_photo')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/logo,branding" alt="Graphic Design" />
-            <div className="showcase-info">Branding</div>
+            <div className="showcase-info">{t('showcase_branding')}</div>
           </div>
           <div className="showcase-item">
             <video className="showcase-video" autoPlay muted loop>
               <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
             </video>
-            <div className="showcase-info">AI Video</div>
+            <div className="showcase-info">{t('showcase_video')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/supercar,concept" alt="Automotive Design" />
-            <div className="showcase-info">Automotive</div>
+            <div className="showcase-info">{t('showcase_auto')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/sports,stadium" alt="Sports Design" />
-            <div className="showcase-info">Sports AI</div>
+            <div className="showcase-info">{t('showcase_sports')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/medical,health" alt="Health Design" />
-            <div className="showcase-info">Health AI</div>
+            <div className="showcase-info">{t('showcase_health')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/finance,banking" alt="Finance Design" />
-            <div className="showcase-info">Finance AI</div>
+            <div className="showcase-info">{t('showcase_finance')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/painting,art" alt="Art AI Painter" />
-            <div className="showcase-info">Art AI Painter</div>
+            <div className="showcase-info">{t('showcase_art')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/education,learning" alt="Global Education" />
-            <div className="showcase-info">Global Education</div>
+            <div className="showcase-info">{t('showcase_edu')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/map,geography" alt="Maps AI" />
-            <div className="showcase-info">Maps AI</div>
+            <div className="showcase-info">{t('showcase_maps')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/artificial,intelligence,circuit" alt="AI Projects" />
-            <div className="showcase-info">AI Projects</div>
+            <div className="showcase-info">{t('showcase_projects')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/blockchain,crypto" alt="Web3" />
-            <div className="showcase-info">Web3 AI</div>
+            <div className="showcase-info">{t('showcase_web3')}</div>
           </div>
           <div className="showcase-item">
             <img src="https://loremflickr.com/400/300/data,analysis,chart" alt="ML Tools" />
-            <div className="showcase-info">ML Tools</div>
+            <div className="showcase-info">{t('showcase_ml')}</div>
           </div>
         </div>
       </section>
 
       <section id="editor" className="demo-section">
         <div className="section-header">
-          <h2>Experience the Power</h2>
-          <p>Describe what you want to create and let our AI do the heavy lifting.</p>
+          <h2>{t('experience_power')}</h2>
+          <p>{t('experience_subtitle')}</p>
         </div>
 
         <div className="ai-editor">
@@ -1178,15 +1194,22 @@ function App() {
                 className={`smart-toggle-btn ${mode === 'smart' ? 'active' : ''}`}
                 onClick={() => setMode('smart')}
               >
-                <span className="sparkle">✨</span> Smart Unified AI
+                <span className="sparkle">✨</span> {t('smart_ai')}
+              </button>
+              <button
+                className={`smart-toggle-btn poster-primary-btn ${mode === 'posters' ? 'active' : ''}`}
+                onClick={() => setMode('posters')}
+                style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)', marginInlineStart: '1rem' }}
+              >
+                <span className="sparkle">🖼️</span> {t('posters_ai')}
               </button>
               <div className="advanced-dropdown">
                 <button className="secondary-button dropdown-trigger">
-                  Advanced Options ▾
+                  {t('advanced_options')} ▾
                 </button>
                 <div className="dropdown-content">
                   <div className="dropdown-section">
-                    <span className="section-label">Specialized Expertise</span>
+                    <span className="section-label">{t('specialized_expertise')}</span>
                     <select
                       value={mode === 'smart' ? 'web' : mode}
                       onChange={(e) => {
@@ -1196,51 +1219,51 @@ function App() {
                       }}
                       className="mode-select-input"
                     >
-                      <optgroup label="Core Design">
-                        <option value="web">Web Design</option>
-                        <option value="mobile">Mobile Design</option>
-                        <option value="desktop">Desktop App</option>
-                        <option value="graphics">Graphics</option>
-                        <option value="posters">Posters</option>
+                      <optgroup label={t('opt_core_design')}>
+                        <option value="web">{t('mode_web')}</option>
+                        <option value="mobile">{t('mode_mobile')}</option>
+                        <option value="desktop">{t('mode_desktop')}</option>
+                        <option value="graphics">{t('mode_graphics')}</option>
+                        <option value="posters">{t('mode_posters')}</option>
                       </optgroup>
-                      <optgroup label="Creative AI">
-                        <option value="cinema">Cinema</option>
-                        <option value="music">Music</option>
-                        <option value="art-ai">Art AI Painter</option>
+                      <optgroup label={t('opt_creative_ai')}>
+                        <option value="cinema">{t('mode_cinema')}</option>
+                        <option value="music">{t('mode_music')}</option>
+                        <option value="art-ai">{t('mode_art_ai')}</option>
                       </optgroup>
-                      <optgroup label="Business & Tech">
-                        <option value="ad-creative">Ads</option>
-                        <option value="shopline">Shopline</option>
-                        <option value="dropshipper">Dropshipper</option>
-                        <option value="finance">Finance</option>
-                        <option value="telecoms">Telecoms</option>
+                      <optgroup label={t('opt_business_tech')}>
+                        <option value="ad-creative">{t('mode_ads')}</option>
+                        <option value="shopline">{t('mode_shopline')}</option>
+                        <option value="dropshipper">{t('mode_dropshipper')}</option>
+                        <option value="finance">{t('mode_finance')}</option>
+                        <option value="telecoms">{t('mode_telecoms')}</option>
                       </optgroup>
-                      <optgroup label="Advanced Tools">
-                        <option value="github">GitHub Session</option>
-                        <option value="langflow">LangFlow</option>
-                        <option value="ml-tools">ML Tools</option>
-                        <option value="ai-projects">AI Projects</option>
-                        <option value="aws">AWS Cloud AI</option>
-                        <option value="web3">Web3</option>
-                        <option value="finetuning">Fine Tuning</option>
-                        <option value="maps">Maps AI</option>
+                      <optgroup label={t('opt_advanced_tools')}>
+                        <option value="github">{t('mode_github')}</option>
+                        <option value="langflow">{t('mode_langflow')}</option>
+                        <option value="ml-tools">{t('mode_ml_tools')}</option>
+                        <option value="ai-projects">{t('mode_ai_projects')}</option>
+                        <option value="aws">{t('mode_aws')}</option>
+                        <option value="web3">{t('mode_web3')}</option>
+                        <option value="finetuning">{t('mode_finetuning')}</option>
+                        <option value="maps">{t('mode_maps')}</option>
                       </optgroup>
                     </select>
                   </div>
                   <div className="dropdown-section">
-                    <span className="section-label">AI Provider</span>
+                    <span className="section-label">{t('ai_provider')}</span>
                     <select
                       value={provider}
                       onChange={(e) => setProvider(e.target.value)}
                       className="mode-select-input"
                     >
-                      <option value="google">Google Gemini</option>
-                      <option value="vertex">Google Vertex AI</option>
-                      <option value="claude">Anthropic Claude</option>
+                      <option value="google">{t('provider_google')}</option>
+                      <option value="vertex">{t('provider_vertex')}</option>
+                      <option value="claude">{t('provider_claude')}</option>
                       <option value="aws">AWS Bedrock</option>
-                      <option value="openrouter">OpenRouter</option>
-                      <option value="openai">OpenAI (DALL-E)</option>
-                      <option value="huggingface">Hugging Face</option>
+                      <option value="openrouter">{t('provider_openrouter')}</option>
+                      <option value="openai">{t('provider_openai')}</option>
+                      <option value="huggingface">{t('provider_huggingface')}</option>
                     </select>
                   </div>
                   <div className="dropdown-section">
@@ -1250,7 +1273,7 @@ function App() {
                         checked={useRAG}
                         onChange={(e) => setUseRAG(e.target.checked)}
                       />
-                      Use RAG AI Knowledge Base
+                      {t('use_rag')}
                     </label>
                   </div>
                 </div>
@@ -1260,9 +1283,9 @@ function App() {
 
           {mode === 'shopline' && (
             <div className="shopline-selector">
-              <h4>Select a Product to Design For</h4>
+              <h4>{t('dropshipper_select_product')}</h4>
               {isFetchingProducts ? (
-                <p>Loading products...</p>
+                <p>{t('loading_products')}</p>
               ) : (
                 <div className="product-list">
                   {shoplineProducts.map(product => (
@@ -1288,24 +1311,22 @@ function App() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h3 style={{ margin: 0 }}>AI Fine-Tuning Manager</h3>
                 <button className="secondary-button" onClick={fetchFineTuningData} disabled={isFinetuningLoading}>
-                  {isFinetuningLoading ? 'Refreshing...' : 'Refresh Data'}
+                  {isFinetuningLoading ? t('refreshing') : t('refresh_data')}
                 </button>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                 <div>
-                  <h4 style={{ color: '#60a5fa', marginBottom: '1rem' }}>Upload Training Data (.jsonl)</h4>
+                  <h4 style={{ color: '#60a5fa', marginBottom: '1rem' }}>{t('finetune_upload_data')}</h4>
                   <input
                     type="file"
                     accept=".jsonl"
                     onChange={handleFileUpload}
                     style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '0.5rem', width: '100%', border: '1px dashed rgba(255,255,255,0.2)' }}
                   />
-                  <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.5rem' }}>
-                    Upload a JSONL file with messages following OpenAI's chat format to train your custom model.
-                  </p>
+                  <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.5rem' }}>{t('finetune_upload_desc')}</p>
 
-                  <h4 style={{ color: '#60a5fa', marginTop: '2rem', marginBottom: '1rem' }}>Active Jobs</h4>
+                  <h4 style={{ color: '#60a5fa', marginTop: '2rem', marginBottom: '1rem' }}>{t('finetune_active_jobs')}</h4>
                   <div style={{ maxHeight: '200px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '0.5rem', padding: '0.5rem' }}>
                     {fineTuningJobs.length > 0 ? (
                       fineTuningJobs.map(job => (
@@ -1317,18 +1338,18 @@ function App() {
                               textTransform: 'capitalize'
                             }}>{job.status}</span>
                           </div>
-                          <div style={{ color: '#94a3b8', marginTop: '0.2rem' }}>Model: {job.model}</div>
+                          <div style={{ color: '#94a3b8', marginTop: '0.2rem' }}>{t('finetune_model_label')}: {job.model}</div>
                           {job.fine_tuned_model && (
-                            <div style={{ color: '#60a5fa', fontSize: '0.75rem', marginTop: '0.2rem', wordBreak: 'break-all' }}>Result: {job.fine_tuned_model}</div>
+                            <div style={{ color: '#60a5fa', fontSize: '0.75rem', marginTop: '0.2rem', wordBreak: 'break-all' }}>{t('finetune_result_label')}: {job.fine_tuned_model}</div>
                           )}
                         </div>
                       ))
-                    ) : <p style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>No jobs found</p>}
+                    ) : <p style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>{t('finetune_no_jobs')}</p>}
                   </div>
                 </div>
 
                 <div>
-                  <h4 style={{ color: '#60a5fa', marginBottom: '1rem' }}>Select Custom Model</h4>
+                  <h4 style={{ color: '#60a5fa', marginBottom: '1rem' }}>{t('finetune_select_custom')}</h4>
                   <div style={{ maxHeight: '400px', overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: '0.5rem' }}>
                     <div
                       className={`model-item ${!selectedFineTunedModel ? 'selected' : ''}`}
@@ -1340,8 +1361,8 @@ function App() {
                       }}
                       onClick={() => setSelectedFineTunedModel(null)}
                     >
-                      <div style={{ fontWeight: 'bold' }}>Default (GPT-3.5 Turbo)</div>
-                      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Standard OpenAI model</div>
+                      <div style={{ fontWeight: 'bold' }}>{t('finetune_default_model')}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{t('finetune_standard_openai')}</div>
                     </div>
                     {fineTunedModelsList.map(model => (
                       <div
@@ -1356,14 +1377,14 @@ function App() {
                         onClick={() => setSelectedFineTunedModel(model.id)}
                       >
                         <div style={{ fontWeight: 'bold', wordBreak: 'break-all' }}>{model.id}</div>
-                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Custom Fine-tuned Model</div>
+                        <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{t('finetune_custom_model_label')}</div>
                       </div>
                     ))}
                   </div>
                   {selectedFineTunedModel && (
                     <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '0.5rem', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
                       <p style={{ margin: 0, color: '#10b981', fontSize: '0.9rem' }}>
-                        <strong>Active:</strong> Using your custom model for generation.
+                        <strong>{t('finetune_active_desc')}</strong>
                       </p>
                     </div>
                   )}
@@ -1374,7 +1395,7 @@ function App() {
 
           {mode === 'ml-tools' && (
             <div className="ml-tools-selector" style={{ marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <h4 style={{ marginBottom: '1rem' }}>Select AI/ML Task</h4>
+              <h4 style={{ marginBottom: '1rem' }}>{t('ml_select_task')}</h4>
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button
                   className={`mode-btn ${mlTask === 'summarization' ? 'active' : ''}`}
@@ -1404,7 +1425,7 @@ function App() {
                 <input
                   type="text"
                   className="input-field niche-input"
-                  placeholder="Enter your niche (e.g., Pet Supplies, Yoga Gear)"
+                  placeholder={t('placeholder_dropshipper')}
                   value={niche}
                   onChange={(e) => setNiche(e.target.value)}
                 />
@@ -1413,19 +1434,19 @@ function App() {
                   onClick={fetchDropshipperSuggestions}
                   disabled={isFetchingSuggestions || !niche}
                 >
-                  {isFetchingSuggestions ? 'Finding Trends...' : 'Find Trending Products'}
+                  {isFetchingSuggestions ? t('finding_trends') : t('find_trending')}
                 </button>
               </div>
 
               {dropshipperSuggestions.length > 0 && (
                 <div className="suggestions-list">
-                  <h4>AI Recommended Products for "{niche}"</h4>
+                  <h4>{t('ai_recommended_for')} "{niche}"</h4>
                   <div className="suggestions-grid">
                     {dropshipperSuggestions.map((item, index) => (
                       <div key={index} className="suggestion-card">
                         <h5>{item.title}</h5>
-                        <p><strong>Trend Reason:</strong> {item.reason}</p>
-                        <p><strong>Strategy:</strong> {item.strategy}</p>
+                        <p><strong>{t('dropshipper_trend_reason')}:</strong> {item.reason}</p>
+                        <p><strong>{t('dropshipper_strategy')}:</strong> {item.strategy}</p>
                         <button
                           className="secondary-button list-btn"
                           onClick={() => {
@@ -1449,31 +1470,31 @@ function App() {
                 type="text"
                 className="input-field"
                 placeholder={
-                mode === 'web' ? "e.g., Landing page for tech startup" :
-                mode === 'mobile' ? "e.g., E-commerce mobile app UI or fitness tracker interface" :
-                mode === 'desktop' ? "e.g., Project management dashboard or professional video editor layout" :
-                mode === 'graphics' ? "e.g., Minimalist logo for a travel brand" :
-                mode === 'posters' ? "e.g., Minimalist film noir movie poster" :
-                mode === 'cinema' ? "e.g., Cinematic shot of a rainy street" :
-                mode === 'music' ? "e.g., Lo-fi hip hop beat for studying" :
-                mode === 'ad-creative' ? "e.g., High-converting Facebook ad for sneakers" :
-                mode === 'langflow' ? "e.g., Ask anything to LangFlow..." :
-                mode === 'games' ? "e.g., Cyberpunk character design or RPG map layout" :
-                mode === 'automotive' ? "e.g., Futuristic electric supercar concept or sleek private jet design" :
-                mode === 'telecoms' ? "e.g., 5G network coverage map or satellite ground station design" :
-                mode === 'medias' ? "e.g., News broadcast studio layout or digital magazine cover" :
-                mode === 'social-networks' ? "e.g., Viral Instagram story template or YouTube channel branding" :
-                mode === 'sports' ? "e.g., Professional football club branding or athlete performance dashboard" :
-                mode === 'health' ? "e.g., Medical dashboard interface or fitness tracking app" :
-                mode === 'finance' ? "e.g., Mobile banking app UI or fintech marketing campaign" :
-                mode === 'art-ai' ? "e.g., Oil painting of a sunset over mountains or abstract digital art" :
-                mode === 'education' ? "e.g., Interactive math lesson for kids or global history curriculum layout" :
-                mode === 'github' ? "e.g., Personal portfolio for GitHub Pages or documentation site" :
-                mode === 'ai-projects' ? "e.g., Architecture for a real-time recommendation engine" :
-                mode === 'aws' ? "e.g., AWS architecture diagram for a scalable web app" :
-                mode === 'web3' ? "e.g., Smart contract for a decentralized voting system" :
-                mode === 'ml-tools' ? `e.g., Enter text to ${mlTask === 'summarization' ? 'summarize' : mlTask === 'sentiment-analysis' ? 'analyze sentiment' : 'translate'}` :
-                "e.g., Describe your creative vision..."
+                mode === 'web' ? t('placeholder_web') :
+                mode === 'mobile' ? t('placeholder_mobile') :
+                mode === 'desktop' ? t('placeholder_desktop') :
+                mode === 'graphics' ? t('placeholder_graphics') :
+                mode === 'posters' ? t('placeholder_posters') :
+                mode === 'cinema' ? t('placeholder_cinema') :
+                mode === 'music' ? t('placeholder_music') :
+                mode === 'ad-creative' ? t('placeholder_ads') :
+                mode === 'langflow' ? t('placeholder_langflow') :
+                mode === 'games' ? t('placeholder_games') :
+                mode === 'automotive' ? t('placeholder_auto') :
+                mode === 'telecoms' ? t('placeholder_telecoms') :
+                mode === 'medias' ? t('placeholder_medias') :
+                mode === 'social-networks' ? t('placeholder_social') :
+                mode === 'sports' ? t('placeholder_sports') :
+                mode === 'health' ? t('placeholder_health') :
+                mode === 'finance' ? t('placeholder_finance') :
+                mode === 'art-ai' ? t('placeholder_art') :
+                mode === 'education' ? t('placeholder_edu') :
+                mode === 'github' ? t('placeholder_github') :
+                mode === 'ai-projects' ? t('placeholder_ai_projects') :
+                mode === 'aws' ? t('placeholder_aws') :
+                mode === 'web3' ? t('placeholder_web3') :
+                mode === 'ml-tools' ? t('placeholder_ml_tools') :
+                t('placeholder_default')
               }
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -1492,14 +1513,14 @@ function App() {
               onClick={handleGenerate}
               disabled={isGenerating || isProcessingMl}
             >
-              {mode === 'ml-tools' ? (isProcessingMl ? 'Processing...' : 'Process Task') : (isGenerating ? 'Generating...' : 'Generate Design')}
+              {mode === 'ml-tools' ? (isProcessingMl ? t('processing') : t('process_task')) : (isGenerating ? t('generating') : t('generate'))}
             </button>
           </div>
 
           {searchResults.length > 0 && (
             <div className="search-results-overlay">
               <div className="search-results-header">
-                <h4>Design Inspiration for "{prompt}"</h4>
+                <h4>{t('design_inspiration_for')} "{prompt}"</h4>
                 <button onClick={() => setSearchResults([])}>✕</button>
               </div>
               <div className="search-results-list">
@@ -1517,7 +1538,7 @@ function App() {
             {(isGenerating || isProcessingMl) && (
               <div className="loading-overlay">
                 <div className="spinner"></div>
-                <p>{isProcessingMl ? 'ML analysis in progress...' : 'AI is thinking...'}</p>
+                <p>{isProcessingMl ? t('ml_analysis') : t('ai_thinking')}</p>
               </div>
             )}
             {previewImage || previewVideo || langflowResponse || mlResult ? (
@@ -1532,7 +1553,7 @@ function App() {
                 )}
                 {langflowResponse && (
                   <div className="langflow-response-box">
-                    <h4>LangFlow Output</h4>
+                    <h4>{t('langflow_output')}</h4>
                     <div className="langflow-content">
                       {langflowResponse}
                     </div>
@@ -1567,16 +1588,16 @@ function App() {
                 {aiInsight && (
                   <div className="ai-insight-box">
                     <div className="insight-header">
-                      <h4>AI Insight</h4>
+                      <h4>{t('ai_insight')}</h4>
                       <div className="insight-actions">
-                        <button className="icon-btn" onClick={() => copyToClipboard(aiInsight)} title="Copy Insight">
+                        <button className="icon-btn" onClick={() => copyToClipboard(aiInsight)} title={t('copy')}>
                           {copySuccess || '📋'}
                         </button>
                         <button className="share-btn" onClick={handleShare}>
-                          <span className="share-icon">📤</span> Share
+                          <span className="share-icon">📤</span> {t('share')}
                         </button>
                         <button className="share-btn facebook-share" onClick={handleFacebookShare}>
-                          <span className="share-icon">f</span> Facebook Share
+                          <span className="share-icon">f</span> Facebook {t('share')}
                         </button>
                       </div>
                     </div>
@@ -1587,16 +1608,16 @@ function App() {
                         onClick={() => handleTakeScreenshot(window.location.href)}
                         disabled={isTakingScreenshot}
                       >
-                        {isTakingScreenshot ? '📸 Capturing...' : '📸 Take App Screenshot'}
+                        {isTakingScreenshot ? `📸 ${t('capturing')}` : `📸 ${t('take_screenshot')}`}
                       </button>
                       {previewImage && (
                         <button className="secondary-button download-btn" onClick={() => downloadMedia(previewImage, `design-${Date.now()}.jpg`)}>
-                          📥 Download Image
+                          📥 {t('download_image')}
                         </button>
                       )}
                       {previewVideo && (
                         <button className="secondary-button download-btn" onClick={() => downloadMedia(previewVideo, `video-${Date.now()}.mp4`)}>
-                          📥 Download Video
+                          📥 {t('download_video')}
                         </button>
                       )}
                       {user && (
@@ -1605,7 +1626,7 @@ function App() {
                           onClick={handlePostToFacebookAPI}
                           disabled={isPostingToFacebook}
                         >
-                          {isPostingToFacebook ? 'Posting...' : '📱 Post to Facebook Feed'}
+                          {isPostingToFacebook ? t('posting') : '📱 ' + t('post_facebook_feed')}
                         </button>
                       )}
                     </div>
@@ -1624,17 +1645,17 @@ function App() {
                           disabled={isListing || listSuccess}
                           style={{ marginTop: '1rem', width: '100%' }}
                         >
-                          {isListing ? 'Listing...' : listSuccess ? '✅ Listed on Marketplace!' : '🚀 List for Sale & Boost Visibility'}
+                          {isListing ? t('listing_marketplace') : listSuccess ? '✅ ' + t('listed_marketplace') : '🚀 ' + t('list_for_sale')}
                         </button>
-                        {listSuccess && <p className="success-msg">Your design is now live on DesignAI Marketplace!</p>}
+                        {listSuccess && <p className="success-msg">{t('design_live')}</p>}
                       </div>
                     )}
                     {screenshotResult && (
                       <div className="screenshot-result-box" style={{ marginTop: '1rem' }}>
-                        <h4>App Screenshot Capture</h4>
+                        <h4>{t('screenshot_capture')}</h4>
                         <img src={screenshotResult} alt="App Screenshot" style={{ width: '100%', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }} />
                         <button className="secondary-button" onClick={() => downloadMedia(screenshotResult, `screenshot-${Date.now()}.png`)} style={{ marginTop: '0.5rem', width: '100%' }}>
-                          📥 Download Screenshot
+                          📥 {t('download_screenshot')}
                         </button>
                       </div>
                     )}
@@ -1646,15 +1667,15 @@ function App() {
                           disabled={isDeploying}
                           style={{ marginTop: '1rem', width: '100%' }}
                         >
-                          {isDeploying ? 'Deploying to GitHub...' : deployUrl ? '✅ Deployed to GitHub Pages!' : '🚀 Deploy to GitHub Pages'}
+                          {isDeploying ? t('deploying_github') : deployUrl ? '✅ ' + t('deployed_github') : '🚀 ' + t('deploy_github')}
                         </button>
                         {deployUrl && (
                           <div className="deploy-success-box">
-                            <p className="success-msg" style={{ color: '#10b981', marginTop: '0.5rem' }}>Your site is live!</p>
+                            <p className="success-msg" style={{ color: '#10b981', marginTop: '0.5rem' }}>{t('site_live')}</p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                               <a href={deployUrl} target="_blank" rel="noopener noreferrer" className="deploy-link" style={{ color: '#60a5fa', textDecoration: 'underline' }}>{deployUrl}</a>
                               {repoUrl && (
-                                <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="repo-link" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 'bold' }}>View on GitHub Session</a>
+                                <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="repo-link" style={{ color: '#6366f1', textDecoration: 'none', fontWeight: 'bold' }}>{t('github_session')}</a>
                               )}
                             </div>
                           </div>
@@ -1663,13 +1684,13 @@ function App() {
                           <div className="copilot-suggestion-box" style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '0.5rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
                             <div className="copilot-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                               <span className="copilot-icon">🤖</span>
-                              <h4 style={{ margin: 0 }}>GitHub Copilot Suggestion</h4>
+                              <h4 style={{ margin: 0 }}>{t('copilot_suggestion_title')}</h4>
                             </div>
                             <pre className="copilot-code" style={{ whiteSpace: 'pre-wrap', background: '#1e293b', padding: '1rem', borderRadius: '0.3rem', fontSize: '0.85rem', color: '#e2e8f0', marginBottom: '1rem' }}>
                               <code>{copilotSuggestion}</code>
                             </pre>
-                            <button className="secondary-button apply-btn" onClick={() => alert('Suggestion applied to your project!')} style={{ width: '100%' }}>
-                              Apply Suggestion
+                            <button className="secondary-button apply-btn" onClick={() => alert(t('applied_suggestion'))} style={{ width: '100%' }}>
+                              {t('apply_suggestion')}
                             </button>
                           </div>
                         )}
@@ -1680,13 +1701,13 @@ function App() {
               </div>
             ) : (
               <div className="empty-state">
-                <p>Your AI generation will appear here</p>
+                <p>{t('empty_state')}</p>
               </div>
             )}
           </div>
           {history.length > 0 && (
             <div className="history-section">
-              <h3>Generation History</h3>
+              <h3>{t('history')}</h3>
               <div className="history-grid">
                 {history.map((item, index) => (
                   <div key={index} className="history-item" onClick={() => {
@@ -1715,7 +1736,7 @@ function App() {
       </section>
 
       <footer>
-        <p>&copy; 2026 DesignAI Studio. Empowering creators through artificial intelligence.</p>
+        <p>&copy; 2026 DesignAI Studio. {t('footer_text')}</p>
       </footer>
     </div>
   );

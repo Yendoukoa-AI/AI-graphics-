@@ -349,7 +349,12 @@ app.post('/api/generate', async (req, res) => {
     const lowerPrompt = prompt.toLowerCase();
     if (lowerPrompt.includes('web') || lowerPrompt.includes('landing page') || lowerPrompt.includes('website')) detectedMode = 'web';
     else if (lowerPrompt.includes('mobile') || lowerPrompt.includes('app') || lowerPrompt.includes('ios') || lowerPrompt.includes('android')) detectedMode = 'mobile';
-    else if (lowerPrompt.includes('poster') || lowerPrompt.includes('affiche') || lowerPrompt.includes('banner')) detectedMode = 'posters';
+    else if (
+      lowerPrompt.includes('poster') || lowerPrompt.includes('affiche') || lowerPrompt.includes('banner') ||
+      lowerPrompt.includes('cartel') || lowerPrompt.includes('póster') || lowerPrompt.includes('海报') ||
+      lowerPrompt.includes('ポスター') || lowerPrompt.includes('ملصق') || lowerPrompt.includes('plakat') ||
+      lowerPrompt.includes('cartaz') || lowerPrompt.includes('flyer') || lowerPrompt.includes('prospectus')
+    ) detectedMode = 'posters';
     else if (lowerPrompt.includes('logo') || lowerPrompt.includes('icon') || lowerPrompt.includes('graphic')) detectedMode = 'graphics';
     else if (lowerPrompt.includes('video') || lowerPrompt.includes('movie') || lowerPrompt.includes('cinema') || lowerPrompt.includes('shot')) detectedMode = 'cinema';
     else if (lowerPrompt.includes('music') || lowerPrompt.includes('audio') || lowerPrompt.includes('song') || lowerPrompt.includes('beat')) detectedMode = 'music';
@@ -453,89 +458,89 @@ app.post('/api/generate', async (req, res) => {
 
     let insight = '';
 
-    let systemPrompt = "You are a professional design expert.";
+    let systemPrompt = "You are a professional design expert. ALWAYS respond in the same language as the user's prompt.";
     let humanPrompt = `Provide a short, inspiring design insight (2 sentences) for the following ${detectedMode} request: "${prompt}"`;
 
     if (detectedMode === 'shopline' && product) {
-      systemPrompt = "You are an e-commerce and dropshipping expert.";
+      systemPrompt = "You are an e-commerce and dropshipping expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, inspiring insight (2 sentences) for a product promotion. Product: "${product.title}". Request: "${prompt}"`;
     } else if (detectedMode === 'cinema') {
-      systemPrompt = "You are a cinematography expert.";
+      systemPrompt = "You are a cinematography expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this shot/scene request: "${prompt}"`;
     } else if (detectedMode === 'music') {
-      systemPrompt = "You are a professional music producer.";
+      systemPrompt = "You are a professional music producer. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, inspiring insight (2 sentences) for this audio/music request: "${prompt}"`;
     } else if (detectedMode === 'entertainment') {
-      systemPrompt = "You are a global entertainment industry expert.";
+      systemPrompt = "You are a global entertainment industry expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, strategic insight (2 sentences) for this project: "${prompt}"`;
     } else if (detectedMode === 'ad-creative') {
-      systemPrompt = "You are an expert ad creative director.";
+      systemPrompt = "You are an expert ad creative director. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, high-conversion insight (2 sentences) for this advertisement request: "${prompt}"`;
     } else if (detectedMode === 'web') {
-      systemPrompt = "You are a professional web designer.";
+      systemPrompt = "You are a professional web designer. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, strategic insight (2 sentences) for this layout request: "${prompt}"`;
     } else if (detectedMode === 'mobile') {
-      systemPrompt = "You are a mobile UI/UX design expert.";
+      systemPrompt = "You are a mobile UI/UX design expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this mobile app/interface request: "${prompt}"`;
     } else if (detectedMode === 'desktop') {
-      systemPrompt = "You are a desktop software interface design expert.";
+      systemPrompt = "You are a desktop software interface design expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, strategic insight (2 sentences) for this application layout request: "${prompt}"`;
     } else if (detectedMode === 'graphics') {
-      systemPrompt = "You are a graphic design expert.";
+      systemPrompt = "You are a graphic design expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this graphic request: "${prompt}"`;
     } else if (detectedMode === 'posters') {
-      systemPrompt = "You are a professional poster designer.";
+      systemPrompt = "You are a professional poster designer and global typography expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, artistic insight (2 sentences) for this poster request: "${prompt}"`;
     } else if (detectedMode === 'games') {
-      systemPrompt = "You are a game design and development expert.";
+      systemPrompt = "You are a game design and development expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, strategic insight (2 sentences) for this game-related request: "${prompt}"`;
     } else if (detectedMode === 'automotive') {
-      systemPrompt = "You are an automotive and aerospace design expert.";
+      systemPrompt = "You are an automotive and aerospace design expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, technical and inspiring insight (2 sentences) for this vehicle/aircraft concept: "${prompt}"`;
     } else if (detectedMode === 'dropshipper') {
-      systemPrompt = "You are a dropshipping and e-commerce expert.";
+      systemPrompt = "You are a dropshipping and e-commerce expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, strategic insight (2 sentences) for this product discovery or marketing request: "${prompt}"`;
     } else if (detectedMode === 'telecoms') {
-      systemPrompt = "You are a telecommunications infrastructure and network expert.";
+      systemPrompt = "You are a telecommunications infrastructure and network expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, technical and strategic insight (2 sentences) for this request: "${prompt}"`;
     } else if (detectedMode === 'medias') {
-      systemPrompt = "You are a media production and broadcasting expert.";
+      systemPrompt = "You are a media production and broadcasting expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this request: "${prompt}"`;
     } else if (detectedMode === 'social-networks') {
-      systemPrompt = "You are a social media strategist and content creator.";
+      systemPrompt = "You are a social media strategist and content creator. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, high-engagement insight (2 sentences) for this request: "${prompt}"`;
     } else if (detectedMode === 'github') {
-      systemPrompt = "You are a GitHub ecosystem and open source expert.";
+      systemPrompt = "You are a GitHub ecosystem and open source expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this GitHub Pages or repository request: "${prompt}"`;
     } else if (detectedMode === 'sports') {
-      systemPrompt = "You are a sports branding and performance analytics expert.";
+      systemPrompt = "You are a sports branding and performance analytics expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this sports-related request: "${prompt}"`;
     } else if (detectedMode === 'health') {
-      systemPrompt = "You are a medical interface and healthcare design expert.";
+      systemPrompt = "You are a medical interface and healthcare design expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional and precise insight (2 sentences) for this health-related request: "${prompt}"`;
     } else if (detectedMode === 'finance') {
-      systemPrompt = "You are a finance AI expert for banks, insurance, VC, fintechs, and mobile operators.";
+      systemPrompt = "You are a finance AI expert for banks, insurance, VC, fintechs, and mobile operators. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional and strategic marketing/product insight (2 sentences) for this request: "${prompt}"`;
     } else if (detectedMode === 'art-ai') {
-      systemPrompt = "You are a professional AI artist and digital painter.";
+      systemPrompt = "You are a professional AI artist and digital painter. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, inspiring insight (2 sentences) about the artistic style and technique for this request: "${prompt}"`;
     } else if (detectedMode === 'education') {
-      systemPrompt = "You are a global education and ed-tech expert.";
+      systemPrompt = "You are a global education and ed-tech expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional and strategic insight (2 sentences) for this educational design or content request: "${prompt}"`;
     } else if (detectedMode === 'maps') {
-      systemPrompt = "You are a geographic design and cartography expert.";
+      systemPrompt = "You are a geographic design and cartography expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this map-related design request: "${prompt}"`;
     } else if (detectedMode === 'ai-projects') {
-      systemPrompt = "You are an AI projects and systems development expert.";
+      systemPrompt = "You are an AI projects and systems development expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, strategic technical insight (2 sentences) for this AI project request: "${prompt}"`;
     } else if (detectedMode === 'web3') {
-      systemPrompt = "You are a Web3 and blockchain development expert.";
+      systemPrompt = "You are a Web3 and blockchain development expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this decentralized application or Web3 request: "${prompt}"`;
     } else if (detectedMode === 'aws') {
-      systemPrompt = "You are an AWS Cloud Architect and AI expert.";
+      systemPrompt = "You are an AWS Cloud Architect and AI expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional and strategic insight (2 sentences) for this AWS cloud or architecture request: "${prompt}"`;
     } else if (detectedMode === 'ml-tools') {
-      systemPrompt = "You are a machine learning and data science tools expert.";
+      systemPrompt = "You are a machine learning and data science tools expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this ML tool or data task: "${prompt}"`;
     }
 

@@ -84,7 +84,7 @@ body {
 .user-dropdown {
   position: absolute;
   top: 100%;
-  right: 0;
+  inset-inline-end: 0;
   background: rgba(30, 30, 30, 0.95);
   backdrop-filter: blur(10px);
   border: 1px solid var(--glass-border);
@@ -153,6 +153,23 @@ body {
   color: white;
 }
 
+.language-selector {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  outline: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+}
+
+.language-selector:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--primary-color);
+}
+
 .hero {
   text-align: center;
   padding: clamp(4rem, 10vh, 8rem) 2rem;
@@ -208,8 +225,7 @@ body {
   gap: 1rem;
   backdrop-filter: blur(10px);
   max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
+  margin-inline: auto;
 }
 
 .nudge-icon {
@@ -388,7 +404,7 @@ body {
   padding: 2.5rem;
   border-radius: 1.5rem;
   border: 1px solid var(--glass-border);
-  text-align: left;
+  text-align: start;
 }
 
 .testimonial-card p {
@@ -469,7 +485,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  text-align: left;
+  text-align: start;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -583,7 +599,7 @@ body {
 .dropdown-content {
   display: none;
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   top: 100%;
   background: #1e293b;
   min-width: 300px;
@@ -594,7 +610,7 @@ body {
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(20px);
   margin-top: 0.5rem;
-  text-align: left;
+  text-align: start;
 }
 
 .advanced-dropdown:hover .dropdown-content {
@@ -701,8 +717,8 @@ body {
 .showcase-info {
   position: absolute;
   bottom: 0;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   background: linear-gradient(transparent, rgba(0,0,0,0.8));
   padding: 1.5rem;
   font-weight: 600;
@@ -798,7 +814,7 @@ body {
 .badge {
   position: absolute;
   top: 1rem;
-  right: 1rem;
+  inset-inline-end: 1rem;
   background: var(--primary-color);
   color: white;
   padding: 0.25rem 0.75rem;
@@ -823,7 +839,7 @@ body {
   list-style: none;
   padding: 0;
   margin: 2rem 0;
-  text-align: left;
+  text-align: start;
 }
 
 .pricing-card li {
@@ -950,7 +966,7 @@ body {
   padding: 20px;
   margin-bottom: 20px;
   width: 100%;
-  text-align: left;
+  text-align: start;
 }
 
 .langflow-response-box h4 {
@@ -1010,8 +1026,8 @@ body {
 .loading-overlay {
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   bottom: 0;
   background: rgba(15, 23, 42, 0.8);
   display: flex;
@@ -1024,7 +1040,7 @@ body {
   width: 40px;
   height: 40px;
   border: 4px solid rgba(255, 255, 255, 0.1);
-  border-left-color: var(--primary-color);
+  border-inline-start-color: var(--primary-color);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -1062,7 +1078,7 @@ footer {
 
 .shopline-selector {
   margin-bottom: 20px;
-  text-align: left;
+  text-align: start;
 }
 
 .shopline-selector h4 {
@@ -1115,7 +1131,7 @@ footer {
 
 .dropshipper-container {
   margin-bottom: 2rem;
-  text-align: left;
+  text-align: start;
 }
 
 .niche-input-group {
@@ -1185,13 +1201,13 @@ footer {
 .ai-insight-box {
   position: absolute;
   bottom: 1.5rem;
-  left: 1.5rem;
-  right: 1.5rem;
+  inset-inline-start: 1.5rem;
+  inset-inline-end: 1.5rem;
   background: rgba(15, 23, 42, 0.95);
   padding: 2rem;
   border-radius: 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: left;
+  text-align: start;
   backdrop-filter: blur(20px);
   max-height: 85%;
   overflow-y: auto;
@@ -1298,7 +1314,7 @@ footer {
 
 .history-section {
   margin-top: 4rem;
-  text-align: left;
+  text-align: start;
   border-top: 1px solid var(--glass-border);
   padding-top: 3rem;
 }
@@ -1435,7 +1451,7 @@ footer {
 .search-insp-btn {
   background: rgba(255, 255, 255, 0.05);
   border: none;
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
   padding: 0 1rem;
   cursor: pointer;
@@ -1454,7 +1470,7 @@ footer {
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  text-align: left;
+  text-align: start;
   backdrop-filter: blur(10px);
   max-height: 300px;
   overflow-y: auto;
@@ -1533,8 +1549,8 @@ footer {
 .modal-overlay {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.85);
   display: flex;
@@ -1558,7 +1574,7 @@ footer {
 .close-modal {
   position: absolute;
   top: 1.5rem;
-  right: 1.5rem;
+  inset-inline-end: 1.5rem;
   background: transparent;
   border: none;
   color: var(--text-muted);
@@ -1636,7 +1652,7 @@ footer {
   font-weight: 600;
   cursor: pointer;
   padding: 0;
-  margin-left: 0.25rem;
+  margin-inline-start: 0.25rem;
 }
 
 .auth-switch button:hover {
