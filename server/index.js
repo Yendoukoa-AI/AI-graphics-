@@ -9,6 +9,7 @@ const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
+const { ChatVertexAI } = require('@langchain/google-vertexai');
 const { ChatAnthropic } = require('@langchain/anthropic');
 const { ChatOpenAI } = require('@langchain/openai');
 const OpenAI = require('openai');
@@ -273,6 +274,12 @@ app.get('/api/shopline/products', async (req, res) => {
 const googleModel = new ChatGoogleGenerativeAI({
   model: "gemini-1.5-flash",
   apiKey: process.env.GOOGLE_AI_API_KEY || 'dummy_key',
+});
+
+// Initialize LangChain ChatVertexAI (Google Cloud Vertex AI)
+const vertexModel = new ChatVertexAI({
+  model: "gemini-1.5-pro",
+  temperature: 0.7,
 });
 
 // Initialize LangChain ChatAnthropic (Claude)
@@ -559,10 +566,11 @@ app.post('/api/generate', async (req, res) => {
     // Attempt to use LangChain for insight if API key is provided
     const hasGoogleKey = process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here';
     const hasClaudeKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'your_anthropic_api_key_here';
+    const hasVertexConfig = !!process.env.GOOGLE_CLOUD_PROJECT;
     const hasOpenRouterKey = process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY !== 'your_openrouter_api_key_here';
     const hasOpenAIKey = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'dummy_key';
 
-    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'openrouter' && hasOpenRouterKey) || (provider === 'openai' && hasOpenAIKey) || (provider === 'aws' && isAwsConfigured)) {
+    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'vertex' && hasVertexConfig) || (provider === 'openrouter' && hasOpenRouterKey) || (provider === 'openai' && hasOpenAIKey) || (provider === 'aws' && isAwsConfigured)) {
       let insightContent = '';
 
       if (provider === 'aws' && isAwsConfigured) {
@@ -593,6 +601,8 @@ app.post('/api/generate', async (req, res) => {
         let chatModel;
         if (provider === 'claude') {
           chatModel = claudeModel;
+        } else if (provider === 'vertex') {
+          chatModel = vertexModel;
         } else if (provider === 'openrouter') {
           chatModel = openRouterModel;
         } else if (provider === 'openai' || fineTunedModel) {
@@ -927,12 +937,15 @@ app.post('/api/github/copilot-suggestion', async (req, res) => {
     let suggestion = '';
     const hasGoogleKey = process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here';
     const hasClaudeKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'your_anthropic_api_key_here';
+    const hasVertexConfig = !!process.env.GOOGLE_CLOUD_PROJECT;
     const hasOpenRouterKey = process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY !== 'your_openrouter_api_key_here';
 
-    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'openrouter' && hasOpenRouterKey)) {
+    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'vertex' && hasVertexConfig) || (provider === 'openrouter' && hasOpenRouterKey)) {
       let chatModel;
       if (provider === 'claude') {
         chatModel = claudeModel;
+      } else if (provider === 'vertex') {
+        chatModel = vertexModel;
       } else if (provider === 'openrouter') {
         chatModel = openRouterModel;
       } else {
@@ -968,12 +981,15 @@ app.post('/api/dropshipper/suggestions', async (req, res) => {
     let suggestions = [];
     const hasGoogleKey = process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your_api_key_here';
     const hasClaudeKey = process.env.ANTHROPIC_API_KEY && process.env.ANTHROPIC_API_KEY !== 'your_anthropic_api_key_here';
+    const hasVertexConfig = !!process.env.GOOGLE_CLOUD_PROJECT;
     const hasOpenRouterKey = process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY !== 'your_openrouter_api_key_here';
 
-    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'openrouter' && hasOpenRouterKey)) {
+    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'vertex' && hasVertexConfig) || (provider === 'openrouter' && hasOpenRouterKey)) {
       let chatModel;
       if (provider === 'claude') {
         chatModel = claudeModel;
+      } else if (provider === 'vertex') {
+        chatModel = vertexModel;
       } else if (provider === 'openrouter') {
         chatModel = openRouterModel;
       } else {

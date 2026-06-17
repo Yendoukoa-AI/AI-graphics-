@@ -1235,6 +1235,7 @@ function App() {
                       className="mode-select-input"
                     >
                       <option value="google">Google Gemini</option>
+                      <option value="vertex">Google Vertex AI</option>
                       <option value="claude">Anthropic Claude</option>
                       <option value="aws">AWS Bedrock</option>
                       <option value="openrouter">OpenRouter</option>
@@ -1714,7 +1715,7 @@ function App() {
       </section>
 
       <footer>
-        <p>&copy; 2024 DesignAI Studio. Empowering creators through artificial intelligence.</p>
+        <p>&copy; 2026 DesignAI Studio. Empowering creators through artificial intelligence.</p>
       </footer>
     </div>
   );
