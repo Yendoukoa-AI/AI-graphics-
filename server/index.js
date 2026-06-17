@@ -23,6 +23,7 @@ const fs = require('fs');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const { sequelize, User } = require('./models');
+const { Op } = require('sequelize');
 require('dotenv').config();
 
 const app = express();
@@ -63,6 +64,7 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
@@ -172,8 +174,6 @@ passport.deserializeUser((user, done) => {
   done(null, user);
 });
 
-// Store reset tokens in memory
-const resetTokens = new Map();
 
 // Email Configuration
 const transporter = nodemailer.createTransport({
@@ -622,10 +622,9 @@ app.post('/auth/forgot-password', async (req, res) => {
     }
 
     const token = crypto.randomBytes(32).toString('hex');
-    resetTokens.set(token, email);
-
-    // Set token to expire in 1 hour
-    setTimeout(() => resetTokens.delete(token), 3600000);
+    user.resetToken = token;
+    user.resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+    await user.save();
 
     if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
       const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
@@ -655,26 +654,30 @@ app.post('/auth/forgot-password', async (req, res) => {
 
 app.post('/auth/reset-password', async (req, res) => {
   const { token, email: providedEmail, newPassword } = req.body;
-  const storedEmail = resetTokens.get(token);
-
-  if (!storedEmail || storedEmail.toLowerCase() !== providedEmail.toLowerCase()) {
-    return res.status(400).json({ error: 'Invalid or expired reset token' });
-  }
-
-  const email = storedEmail;
 
   try {
-    const user = await User.findOne({ where: { email: email.toLowerCase() } });
+    const user = await User.findOne({
+      where: {
+        email: providedEmail.toLowerCase(),
+        resetToken: token,
+        resetTokenExpiry: {
+          [Op.gt]: new Date()
+        }
+      }
+    });
+
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
+    user.resetToken = null;
+    user.resetTokenExpiry = null;
     await user.save();
 
-    resetTokens.delete(token);
     res.json({ success: true, message: 'Password has been reset successfully' });
   } catch (error) {
+    console.error('Reset password error:', error);
     res.status(500).json({ error: 'Failed to reset password' });
   }
 });

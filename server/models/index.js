@@ -40,6 +40,14 @@ const User = sequelize.define('User', {
   photos: {
     type: DataTypes.JSON,
     allowNull: true
+  },
+  resetToken: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  resetTokenExpiry: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 });
 

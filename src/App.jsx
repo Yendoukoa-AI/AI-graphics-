@@ -179,13 +179,24 @@ function App() {
       : { email, password, displayName };
 
     try {
+      console.log(`Attempting ${authMode} at ${API_URL}${endpoint}`);
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         credentials: 'include'
       });
-      const data = await response.json();
+
+      let data;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text);
+        throw new Error('Server returned a non-JSON response');
+      }
+
       if (response.ok) {
         setUser(data);
         setShowAuthModal(false);
