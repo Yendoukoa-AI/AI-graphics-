@@ -49,7 +49,9 @@
     "@vitejs/plugin-react": "^4.1.1",
     "jsdom": "^22.1.0",
     "playwright-core": "^1.60.0",
+    "serve": "^14.2.6",
     "vite": "^4.5.3",
-    "vitest": "^0.34.6"
+    "vitest": "^0.34.6",
+    "wait-on": "^9.0.10"
   }
 }
