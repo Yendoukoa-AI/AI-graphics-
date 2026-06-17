@@ -2,12 +2,17 @@
 
 DesignAI Studio is an AI-powered design platform dedicated to the modern creator. It leverages artificial intelligence to revolutionize workflows in web design, graphic design, Photoshop enhancements, and poster creation.
 
-## 📢 Latest News: Version 1.1.0 Released!
+## 📢 Latest News: Super Release v1.2.0 is Here!
 
-We are excited to announce our latest release! **DesignAI Studio v1.1.0** is now available.
+We are excited to announce our super release! **DesignAI Studio v1.2.0** is now live with enhanced authentication.
 
-- **View on GitHub Session**: [v1.1.0](https://github.com/GYFX35/AI-graphics-/releases/tag/v1.1.0)
-- **Artifact**: [Download release-v1.1.0.tar.gz](https://github.com/GYFX35/AI-graphics-/releases/download/v1.1.0/release-v1.1.0.tar.gz)
+- **View on GitHub Session**: [v1.2.0](https://github.com/GYFX35/AI-graphics-/releases/tag/v1.2.0)
+- **Artifact**: [Download release-v1.2.0.tar.gz](https://github.com/GYFX35/AI-graphics-/releases/download/v1.2.0/release-v1.2.0.tar.gz)
+
+### What's New in v1.2.0
+- **User Authentication**: Secure login and registration to save your progress.
+- **Social Login**: Continue with Google or Facebook for a seamless experience.
+- **Auth Nudge**: Intelligent reminders to connect your account and unlock persistent storage.
 
 ## 🚀 Features
 
@@ -72,7 +77,7 @@ We provide automated packaging and integrity verification tools to ensure the se
 
 ### 📥 Download Latest Release
 You can download the latest production-ready artifact directly from our releases page:
-- **[Download v1.1.0 Artifact](https://github.com/GYFX35/AI-graphics-/releases/download/v1.1.0/release-v1.1.0.tar.gz)**
+- **[Download v1.2.0 Artifact](https://github.com/GYFX35/AI-graphics-/releases/download/v1.2.0/release-v1.2.0.tar.gz)**
 
 ### Generating a Release Artifact
 To create a downloadable distribution package:
@@ -80,13 +85,13 @@ To create a downloadable distribution package:
 npm run package
 ```
 This will generate:
-- `release-v1.1.0.tar.gz`: The production-ready bundle.
-- `release-v1.1.0.tar.gz.sha256`: A checksum file to verify the artifact.
+- `release-v1.2.0.tar.gz`: The production-ready bundle.
+- `release-v1.2.0.tar.gz.sha256`: A checksum file to verify the artifact.
 
 ### Verifying Integrity
 To protect against unauthorized modifications, always verify the integrity of the downloaded artifact:
 ```bash
-python3 scripts/verify_integrity.py release-v1.1.0.tar.gz
+python3 scripts/verify_integrity.py release-v1.2.0.tar.gz
 ```
 The tool will check the artifact against its SHA-256 hash and report any discrepancies.
 

@@ -789,6 +789,13 @@ function App() {
       </nav>
 
       <header className="hero">
+        {!user && (
+          <div className="auth-nudge">
+            <span className="nudge-icon">🔒</span>
+            <span>Connect with Google to unlock persistent design storage and history.</span>
+            <a href={`${API_URL}/auth/google`} className="nudge-link">Connect Now</a>
+          </div>
+        )}
         <div className="hero-badge">The Ultimate AI Creative Suite 🌐 🎨 🖼️</div>
         <h1>Professional AI Design <br />for Modern Creators</h1>
         <p>Generate responsive web layouts, professional graphics, and stunning posters instantly. Now featuring enhanced Cinematography and Music AI capabilities.</p>
