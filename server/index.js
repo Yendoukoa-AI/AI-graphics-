@@ -36,7 +36,7 @@ sequelize.sync().then(() => {
 });
 
 // Trust proxy for secure cookies on platforms like Vercel/Render
-app.set('trust proxy', 1);
+app.set('trust proxy', true);
 
 // Shared Puppeteer browser instance for efficiency
 let sharedBrowser = null;
@@ -60,6 +60,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'designai-studio-secret',
   resave: false,
   saveUninitialized: false,
+  proxy: true,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
