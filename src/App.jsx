@@ -38,6 +38,7 @@ function App() {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [authError, setAuthError] = useState('');
+  const [authMessage, setAuthMessage] = useState('');
   const [niche, setNiche] = useState('');
   const [dropshipperSuggestions, setDropshipperSuggestions] = useState([]);
   const [isFetchingSuggestions, setIsFetchingSuggestions] = useState(false);
@@ -65,11 +66,24 @@ function App() {
   const [fineTunedModelsList, setFineTunedModelsList] = useState([]);
   const [selectedFineTunedModel, setSelectedFineTunedModel] = useState(null);
   const [isFinetuningLoading, setIsFinetuningLoading] = useState(false);
+  const [resetToken, setResetToken] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
 
   const API_URL = import.meta.env.VITE_API_URL || '';
 
   useEffect(() => {
     fetchUser();
+
+    // Check for reset token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (token) {
+      setResetToken(token);
+      const emailParam = urlParams.get('email');
+      if (emailParam) setEmail(emailParam);
+      setAuthMode('reset-password');
+      setShowAuthModal(true);
+    }
 
     // Initialize Facebook SDK
     window.fbAsyncInit = function() {
@@ -113,6 +127,52 @@ function App() {
   const handleAuth = async (e) => {
     e.preventDefault();
     setAuthError('');
+    setAuthMessage('');
+
+    if (authMode === 'reset-password') {
+      try {
+        const response = await fetch(`${API_URL}/auth/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: resetToken, email, newPassword }),
+          credentials: 'include'
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setAuthMessage('Password reset successful! You can now login.');
+          setAuthMode('login');
+          setNewPassword('');
+          // Clear URL params
+          window.history.replaceState({}, document.title, "/");
+        } else {
+          setAuthError(data.error || 'Failed to reset password');
+        }
+      } catch (error) {
+        setAuthError('An error occurred. Please try again.');
+      }
+      return;
+    }
+
+    if (authMode === 'forgot-password') {
+      try {
+        const response = await fetch(`${API_URL}/auth/forgot-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+          credentials: 'include'
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setAuthMessage(data.message || 'Check your email for reset instructions.');
+        } else {
+          setAuthError(data.error || 'Failed to send reset email. Please try again.');
+        }
+      } catch (error) {
+        setAuthError('Failed to send reset email. Please try again.');
+      }
+      return;
+    }
+
     const endpoint = authMode === 'login' ? '/auth/login' : '/auth/register';
     const payload = authMode === 'login'
       ? { email, password }
@@ -133,10 +193,11 @@ function App() {
         setPassword('');
         setDisplayName('');
       } else {
-        setAuthError(data.error || 'Authentication failed');
+        setAuthError(data.error || data.message || 'Authentication failed');
       }
     } catch (error) {
-      setAuthError('An error occurred during authentication');
+      console.error('Auth error:', error);
+      setAuthError('An error occurred during authentication. Please check your connection.');
     }
   };
 
@@ -598,8 +659,13 @@ function App() {
         <div className="modal-overlay">
           <div className="auth-modal">
             <button className="close-modal" onClick={() => setShowAuthModal(false)}>✕</button>
-            <h3>{authMode === 'login' ? 'Login to DesignAI' : 'Create Account'}</h3>
+            <h3>
+              {authMode === 'login' ? 'Login to DesignAI' :
+               authMode === 'register' ? 'Create Account' :
+               authMode === 'forgot-password' ? 'Forgot Password' : 'Reset Password'}
+            </h3>
             {authError && <p className="auth-error-msg">{authError}</p>}
+            {authMessage && <p className="auth-success-msg" style={{ color: '#10b981', marginBottom: '1rem', textAlign: 'center' }}>{authMessage}</p>}
             <form onSubmit={handleAuth}>
               {authMode === 'register' && (
                 <div className="input-field-group">
@@ -613,35 +679,69 @@ function App() {
                   />
                 </div>
               )}
-              <div className="input-field-group">
-                <label>Email Address</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  required
-                />
-              </div>
-              <div className="input-field-group">
-                <label>Password</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-              <button type="submit" className="cta-button auth-submit">
-                {authMode === 'login' ? 'Login' : 'Register'}
-              </button>
+              {(authMode === 'login' || authMode === 'register' || authMode === 'forgot-password' || authMode === 'reset-password') && (
+                <div className="input-field-group">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    required
+                    readOnly={authMode === 'reset-password'}
+                  />
+                </div>
+              )}
+              {(authMode === 'login' || authMode === 'register') && (
+                <div className="input-field-group">
+                  <label>Password</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              )}
+              {(authMode === 'login' || authMode === 'register') && (
+                <button type="submit" className="cta-button auth-submit">
+                  {authMode === 'login' ? 'Login' : 'Register'}
+                </button>
+              )}
+              {authMode === 'forgot-password' && (
+                <button type="submit" className="cta-button auth-submit">
+                  Send Reset Link
+                </button>
+              )}
+              {authMode === 'reset-password' && (
+                <>
+                  <div className="input-field-group">
+                    <label>New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
+                  <button type="submit" className="cta-button auth-submit">
+                    Reset Password
+                  </button>
+                </>
+              )}
             </form>
             <div className="auth-switch">
               {authMode === 'login' ? (
-                <p>Don't have an account? <button onClick={() => setAuthMode('register')}>Register</button></p>
-              ) : (
+                <>
+                  <p>Don't have an account? <button onClick={() => setAuthMode('register')}>Register</button></p>
+                  <p><button onClick={() => setAuthMode('forgot-password')}>Forgot password?</button></p>
+                </>
+              ) : authMode === 'register' ? (
                 <p>Already have an account? <button onClick={() => setAuthMode('login')}>Login</button></p>
+              ) : (
+                <p><button onClick={() => setAuthMode('login')}>Back to Login</button></p>
               )}
             </div>
             <div className="auth-divider">

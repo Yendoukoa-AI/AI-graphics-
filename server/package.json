@@ -28,6 +28,7 @@
     "googleapis": "^173.0.0",
     "langchain": "^1.4.5",
     "multer": "^2.2.0",
+    "nodemailer": "^6.9.13",
     "octokit": "^5.0.5",
     "openai": "^6.42.0",
     "passport": "^0.7.0",

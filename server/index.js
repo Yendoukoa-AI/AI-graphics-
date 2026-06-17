@@ -20,10 +20,15 @@ const { google } = require('googleapis');
 const puppeteer = require('puppeteer');
 const multer = require('multer');
 const fs = require('fs');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Trust proxy for secure cookies on platforms like Vercel/Render
+app.set('trust proxy', 1);
 
 // Shared Puppeteer browser instance for efficiency
 let sharedBrowser = null;
@@ -49,6 +54,7 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
@@ -66,7 +72,7 @@ passport.use(new LocalStrategy({
   },
   async (email, password, done) => {
     try {
-      const user = users.find(u => u.email === email);
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
       if (!user) {
         return done(null, false, { message: 'Incorrect email.' });
       }
@@ -130,6 +136,39 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser((user, done) => {
   done(null, user);
 });
+
+// Store reset tokens in memory
+const resetTokens = new Map();
+
+// Email Configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS
+  }
+});
+
+const sendWelcomeEmail = async (email, displayName) => {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+    console.log('Gmail credentials not set, skipping welcome email.');
+    return;
+  }
+
+  const mailOptions = {
+    from: process.env.GMAIL_USER,
+    to: email,
+    subject: 'Welcome to DesignAI Studio!',
+    text: `Hi ${displayName},\n\nWelcome to DesignAI Studio! We're excited to have you on board.\n\nBest regards,\nThe DesignAI Team`
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Welcome email sent to:', email);
+  } catch (error) {
+    console.error('Error sending welcome email:', error);
+  }
+};
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, '../dist')));
@@ -425,7 +464,7 @@ app.post('/auth/register', async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  const existingUser = users.find(u => u.email === email);
+  const existingUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
   if (existingUser) {
     return res.status(400).json({ error: 'User already exists' });
   }
@@ -443,6 +482,10 @@ app.post('/auth/register', async (req, res) => {
 
     req.login(newUser, (err) => {
       if (err) return res.status(500).json({ error: 'Login failed after registration' });
+
+      // Send welcome email asynchronously
+      sendWelcomeEmail(email, newUser.displayName).catch(console.error);
+
       res.json(newUser);
     });
   } catch (error) {
@@ -498,6 +541,67 @@ app.get('/auth/facebook/callback', (req, res, next) => {
 
 app.get('/auth/user', (req, res) => {
   res.json(req.user || null);
+});
+
+app.post('/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+  if (!user) {
+    // We don't want to reveal if a user exists
+    return res.json({ message: 'If an account exists with that email, a reset link has been sent.' });
+  }
+
+  const token = crypto.randomBytes(32).toString('hex');
+  resetTokens.set(token, email);
+
+  // Set token to expire in 1 hour
+  setTimeout(() => resetTokens.delete(token), 3600000);
+
+  if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: email,
+      subject: 'Password Reset - DesignAI Studio',
+      text: `You requested a password reset. Click here to reset your password: ${resetUrl}\n\nIf you didn't request this, ignore this email.`
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error('Error sending reset email:', error);
+      return res.status(500).json({ error: 'Failed to send reset email' });
+    }
+  } else {
+    console.log(`Reset token for ${email}: ${token}`);
+  }
+
+  res.json({ message: 'If an account exists with that email, a reset link has been sent.' });
+});
+
+app.post('/auth/reset-password', async (req, res) => {
+  const { token, email: providedEmail, newPassword } = req.body;
+  const storedEmail = resetTokens.get(token);
+
+  if (!storedEmail || storedEmail.toLowerCase() !== providedEmail.toLowerCase()) {
+    return res.status(400).json({ error: 'Invalid or expired reset token' });
+  }
+
+  const email = storedEmail;
+
+  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  try {
+    user.password = await bcrypt.hash(newPassword, 10);
+    resetTokens.delete(token);
+    res.json({ success: true, message: 'Password has been reset successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
 });
 
 app.get('/auth/logout', (req, res, next) => {
