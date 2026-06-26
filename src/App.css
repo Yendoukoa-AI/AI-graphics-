@@ -613,7 +613,8 @@ body {
   text-align: start;
 }
 
-.advanced-dropdown:hover .dropdown-content {
+.advanced-dropdown:hover .dropdown-content,
+.dropdown-content.show {
   display: block;
 }
 

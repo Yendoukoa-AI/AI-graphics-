@@ -14,68 +14,68 @@ test('renders Try for Free button', () => {
   expect(buttonElement).toBeDefined();
 });
 
-test('renders Ad Creative AI feature card', () => {
+test('renders Global Ad Creative AI feature card', () => {
   render(<App />);
-  const featureElement = screen.getByText(/Ad Creative AI/i);
+  const featureElement = screen.getByText(/Global Ad Creative AI/i);
   expect(featureElement).toBeDefined();
 });
 
 test('renders Ads mode option', () => {
   render(<App />);
-  const modeOption = screen.getByText(/^Ads$/i);
-  expect(modeOption).toBeDefined();
+  const modeOptions = screen.getAllByText(/Global Ads/i);
+  expect(modeOptions.length).toBeGreaterThan(0);
 });
 
-test('renders Games Design & Dev feature card', () => {
+test('renders Global Games Design & Dev feature card', () => {
   render(<App />);
-  const featureElement = screen.getByText(/Games Design & Dev/i);
+  const featureElement = screen.getByText(/Global Games Design & Dev/i);
   expect(featureElement).toBeDefined();
 });
 
 test('renders Games mode option', () => {
   render(<App />);
-  const modeOptions = screen.getAllByText(/games/i);
+  const modeOptions = screen.getAllByText(/Global Games/i);
   expect(modeOptions.length).toBeGreaterThan(0);
 });
 
-test('renders Automotive & Aero feature card', () => {
+test('renders Global Automotive & Aero feature card', () => {
   render(<App />);
-  const featureElement = screen.getByText(/Automotive & Aero/i);
+  const featureElement = screen.getByText(/Global Automotive & Aero/i);
   expect(featureElement).toBeDefined();
 });
 
 test('renders Automotive mode option', () => {
   render(<App />);
-  const modeOptions = screen.getAllByText(/automotive/i);
+  const modeOptions = screen.getAllByText(/Global Automotive/i);
   expect(modeOptions.length).toBeGreaterThan(0);
 });
 
-test('renders Health AI feature card', () => {
+test('renders Global Health AI feature card', () => {
   render(<App />);
-  const featureElements = screen.getAllByText(/Health AI/i);
+  const featureElements = screen.getAllByText(/Global Health AI/i);
   expect(featureElements.length).toBeGreaterThan(0);
 });
 
-test('renders Finance AI feature card', () => {
+test('renders Global Finance AI feature card', () => {
   render(<App />);
-  const featureElements = screen.getAllByText(/Finance AI/i);
+  const featureElements = screen.getAllByText(/Global Finance AI/i);
   expect(featureElements.length).toBeGreaterThan(0);
 });
 
 test('renders Finance mode option', () => {
   render(<App />);
-  const modeOptions = screen.getAllByText(/finance/i);
+  const modeOptions = screen.getAllByText(/Global Finance/i);
   expect(modeOptions.length).toBeGreaterThan(0);
 });
 
-test('renders Art AI Painter feature card', () => {
+test('renders Global Art AI Painter feature card', () => {
   render(<App />);
-  const featureElements = screen.getAllByText(/Art AI Painter/i);
+  const featureElements = screen.getAllByText(/Global Art AI Painter/i);
   expect(featureElements.length).toBeGreaterThan(0);
 });
 
 test('renders Art AI mode option', () => {
   render(<App />);
-  const modeOptions = screen.getAllByText(/Art AI Painter/i);
+  const modeOptions = screen.getAllByText(/Global Art AI Painter/i);
   expect(modeOptions.length).toBeGreaterThan(0);
 });

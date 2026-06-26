@@ -73,6 +73,7 @@ function App() {
   const [resetToken, setResetToken] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [language, setLanguage] = useState('en');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const t = (key) => translations[language][key] || translations['en'][key];
 
@@ -311,9 +312,9 @@ function App() {
     }
   };
 
-  const handleGooglePlaces = async () => {
+  const handleGooglePlaces = async (internalCall = false) => {
     if (!prompt) return;
-    setIsGenerating(true);
+    if (!internalCall) setIsGenerating(true);
     try {
       const response = await fetch(`${API_URL}/api/google/places?q=${encodeURIComponent(prompt)}`, {
         credentials: 'include'
@@ -335,7 +336,7 @@ function App() {
       console.error('Error with Google places:', error);
       alert('Failed to connect to maps service.');
     } finally {
-      setIsGenerating(false);
+      if (!internalCall) setIsGenerating(false);
     }
   };
 
@@ -420,17 +421,14 @@ function App() {
 
   const handlePayment = async (gateway, amount) => {
     try {
-      let endpoint;
-      let payload = { amount, email: user?.email };
+      const payload = {
+        gateway,
+        amount,
+        email: user?.email,
+        planName: 'DesignAI Studio Pro'
+      };
 
-      if (gateway === 'stripe') {
-        endpoint = `${API_URL}/api/create-checkout-session`;
-        payload.planName = 'DesignAI Studio Pro';
-      } else {
-        endpoint = `${API_URL}/api/payments/${gateway}/initialize`;
-      }
-
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${API_URL}/api/payments/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -438,8 +436,10 @@ function App() {
       });
       const data = await response.json();
 
-      if (gateway === 'stripe') {
-        if (data.url) window.location.href = data.url;
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.error) {
+        alert(data.error);
       }
     } catch (error) {
       console.error(`Error initializing ${gateway} payment:`, error);
@@ -590,8 +590,7 @@ function App() {
 
     try {
       if (mode === 'maps') {
-        await handleGooglePlaces();
-        return;
+        await handleGooglePlaces(true);
       }
 
       if (mode === 'langflow') {
@@ -607,7 +606,7 @@ function App() {
           const data = await response.json();
           setLangflowResponse(data.result);
           result.langflowResponse = data.result;
-          setHistory([result, ...history]);
+          setHistory(prev => [result, ...prev]);
         } catch (error) {
           console.error('Error with LangFlow:', error);
           setLangflowResponse('Failed to get response from LangFlow.');
@@ -649,7 +648,7 @@ function App() {
           setAiInsight(data.insight);
           result.insight = data.insight;
         }
-        setHistory([result, ...history]);
+        setHistory(prev => [result, ...prev]);
       } catch (error) {
         console.error('Error generating design:', error);
         // Fallback for demo if backend is not running
@@ -667,7 +666,7 @@ function App() {
         }
         result.insight = "Design insight: Focus on balance and typography for your project.";
         setAiInsight(result.insight);
-        setHistory([result, ...history]);
+        setHistory(prev => [result, ...prev]);
       }
     } catch (err) {
       console.error('Critical error in handleGenerate:', err);
@@ -876,7 +875,7 @@ function App() {
             <option value="ja">{t('lang_ja')}</option>
             <option value="ar">{t('lang_ar')}</option>
           </select>
-          <button className="sponsor-button">{t('sponsor')}</button>
+          <button className="sponsor-button" onClick={() => document.getElementById('sponsorship')?.scrollIntoView({ behavior: 'smooth' })}>{t('sponsor')}</button>
           {user ? (
             <div className="user-profile">
               <img src={user.photos?.[0]?.value || `https://ui-avatars.com/api/?name=${user.displayName}`} alt={user.displayName} className="user-avatar" />
@@ -912,7 +911,7 @@ function App() {
         <h1>{t('hero_title_1')} <br /> {t('hero_title_2')}</h1>
         <p>{t('hero_subtitle')}</p>
         <div className="hero-actions">
-          <button className="cta-button">{t('try_free')}</button>
+          <button className="cta-button" onClick={() => document.getElementById('editor')?.scrollIntoView({ behavior: 'smooth' })}>{t('try_free')}</button>
           <a href="#editor" className="secondary-button" style={{ textDecoration: 'none', display: 'inline-block' }}>{t('watch_demo')}</a>
         </div>
       </header>
@@ -1096,7 +1095,7 @@ function App() {
               <li>{t('price_basic_templates')}</li>
               <li>{t('price_standard_quality')}</li>
             </ul>
-            <button className="pricing-btn">{t('start_free')}</button>
+            <button className="pricing-btn" onClick={() => document.getElementById('editor')?.scrollIntoView({ behavior: 'smooth' })}>{t('start_free')}</button>
           </div>
           <div className="pricing-card popular">
             <div className="badge">{t('most_popular')}</div>
@@ -1121,7 +1120,7 @@ function App() {
               <li>{t('price_team_collab')}</li>
               <li>{t('price_dedicated_manager')}</li>
             </ul>
-            <button className="pricing-btn">{t('contact_sales')}</button>
+            <button className="pricing-btn" onClick={() => alert('Our sales team will be in touch with you shortly!')}>{t('contact_sales')}</button>
           </div>
         </div>
       </section>
@@ -1144,7 +1143,7 @@ function App() {
               <p>{t('partnership_sales_desc')}</p>
             </div>
           </div>
-          <button className="cta-button">{t('partnership_btn')}</button>
+          <button className="cta-button" onClick={() => alert('Thank you for your interest in our Partnership Program! We will contact you soon.')}>{t('partnership_btn')}</button>
         </div>
       </section>
 
@@ -1162,7 +1161,7 @@ function App() {
               <span className="stat-label">{t('sponsorship_stat_raised')}</span>
             </div>
           </div>
-          <button className="sponsor-cta">{t('sponsorship_btn')}</button>
+          <button className="sponsor-cta" onClick={() => handlePayment('stripe', 50)}>{t('sponsorship_btn')}</button>
         </div>
       </section>
 
@@ -1291,10 +1290,13 @@ function App() {
                 <span className="sparkle">🖼️</span> {t('posters_ai')}
               </button>
               <div className="advanced-dropdown">
-                <button className="secondary-button dropdown-trigger">
+                <button
+                  className="secondary-button dropdown-trigger"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                >
                   {t('advanced_options')} ▾
                 </button>
-                <div className="dropdown-content">
+                <div className={`dropdown-content ${showAdvanced ? 'show' : ''}`}>
                   <div className="dropdown-section">
                     <span className="section-label">{t('specialized_expertise')}</span>
                     <select
@@ -1585,6 +1587,7 @@ function App() {
                 mode === 'ml-tools' ? t('placeholder_ml_tools') :
                 mode === 'photoshop' ? t('placeholder_photoshop') :
                 mode === 'image-gen' ? t('placeholder_image_gen') :
+                mode === 'maps' ? t('placeholder_maps') :
                 t('placeholder_default')
               }
                 value={prompt}

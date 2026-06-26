@@ -1407,10 +1407,56 @@ app.post('/api/cloudinary/upload', async (req, res) => {
   }
 });
 
-// Stripe Routes
+// Payment Routes
+app.post('/api/payments/initialize', async (req, res) => {
+  const { gateway, amount, planName, email } = req.body;
+
+  if (gateway === 'stripe') {
+    if (!isStripeConfigured) {
+      return res.json({
+        url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback?status=success&gateway=stripe&isMock=true`,
+        isMock: true
+      });
+    }
+
+    try {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: planName || 'DesignAI Studio Pro',
+              },
+              unit_amount: (amount || 29) * 100,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback?status=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback?status=cancel`,
+        customer_email: email || (req.user ? req.user.email : undefined),
+      });
+
+      return res.json({ url: session.url });
+    } catch (error) {
+      console.error('Stripe session creation error:', error);
+      return res.status(500).json({ error: 'Failed to create Stripe session' });
+    }
+  }
+
+  // Fallback or other gateways
+  res.status(400).json({ error: 'Unsupported payment gateway' });
+});
+
+// Deprecated endpoint kept for backward compatibility if needed, but redirects to the new one
 app.post('/api/create-checkout-session', async (req, res) => {
   const { amount, planName } = req.body;
-
+  // Redirect internally to the unified endpoint
+  req.body.gateway = 'stripe';
+  // Manually handle the logic to avoid recursion if we were to use app.handle or similar
   if (!isStripeConfigured) {
     return res.json({
       url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback?status=success&gateway=stripe&isMock=true`,
