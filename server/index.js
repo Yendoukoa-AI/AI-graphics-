@@ -26,6 +26,9 @@ const crypto = require('crypto');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
 const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
+const cloudinary = require('cloudinary').v2;
+const Flutterwave = require('flutterwave-node-v3');
+const paystack = require('paystack-api');
 const { sequelize, User } = require('./models');
 const { Op } = require('sequelize');
 require('dotenv').config();
@@ -335,6 +338,24 @@ const upload = multer({ dest: UPLOADS_DIR });
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
+
+// Initialize Cloudinary
+const isCloudinaryConfigured = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
+
+// Initialize Flutterwave
+const isFlutterwaveConfigured = !!(process.env.FLUTTERWAVE_PUBLIC_KEY && process.env.FLUTTERWAVE_SECRET_KEY);
+const flw = isFlutterwaveConfigured ? new Flutterwave(process.env.FLUTTERWAVE_PUBLIC_KEY, process.env.FLUTTERWAVE_SECRET_KEY) : null;
+
+// Initialize Paystack
+const isPaystackConfigured = !!process.env.PAYSTACK_SECRET_KEY;
+const paystackClient = isPaystackConfigured ? paystack(process.env.PAYSTACK_SECRET_KEY) : null;
 
 app.post('/api/generate', async (req, res) => {
   let { prompt, mode, product, provider = 'google', useRAG = false, fineTunedModel = null } = req.body;
@@ -1317,6 +1338,149 @@ app.get('/api/finetuning/models', async (req, res) => {
     console.error('Error listing models:', error);
     res.status(500).json({ error: 'Failed to list models', details: error.message });
   }
+});
+
+app.post('/api/cloudinary/upload', async (req, res) => {
+  const { imageUrl } = req.body;
+
+  if (!imageUrl) {
+    return res.status(400).json({ error: 'imageUrl is required' });
+  }
+
+  if (!isCloudinaryConfigured) {
+    return res.json({
+      url: imageUrl,
+      secure_url: imageUrl,
+      public_id: `mock-${Date.now()}`,
+      isMock: true,
+      message: 'Cloudinary is not configured. Returning original URL.'
+    });
+  }
+
+  try {
+    const result = await cloudinary.uploader.upload(imageUrl, {
+      folder: 'designai_studio',
+    });
+    res.json(result);
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    res.status(500).json({ error: 'Failed to upload to Cloudinary', details: error.message });
+  }
+});
+
+// Payment Routes - Flutterwave
+app.post('/api/payments/flutterwave/initialize', async (req, res) => {
+  const { amount, email, name } = req.body;
+
+  if (!isFlutterwaveConfigured) {
+    return res.json({
+      status: 'success',
+      message: 'Flutterwave not configured. Simulated payment link.',
+      data: {
+        link: 'https://flutterwave.com/pay/mock-session'
+      },
+      isMock: true
+    });
+  }
+
+  try {
+    const payload = {
+      tx_ref: `tx-${Date.now()}`,
+      amount: amount || '29',
+      currency: 'USD',
+      redirect_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback`,
+      customer: {
+        email: email || (req.user ? req.user.email : 'guest@example.com'),
+        name: name || (req.user ? req.user.displayName : 'Guest User'),
+      },
+      customizations: {
+        title: 'DesignAI Studio Pro',
+        description: 'Upgrade to Pro Plan',
+        logo: 'https://designai-studio.com/logo.png'
+      }
+    };
+
+    // Use axios for a direct call to the standard transaction flow
+    const initResponse = await axios.post('https://api.flutterwave.com/v3/payments', payload, {
+        headers: {
+            Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`
+        }
+    });
+
+    res.json(initResponse.data);
+  } catch (error) {
+    console.error('Flutterwave initialization error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to initialize Flutterwave payment' });
+  }
+});
+
+app.post('/api/payments/flutterwave/webhook', async (req, res) => {
+    // Verify webhook signature in production
+    const secretHash = process.env.FLUTTERWAVE_WEBHOOK_HASH;
+    const signature = req.headers['verif-hash'];
+
+    if (secretHash && signature !== secretHash) {
+        return res.status(401).end();
+    }
+
+    const { status, tx_ref, id } = req.body.data || req.body;
+
+    if (status === 'successful') {
+        console.log(`Payment successful for transaction ${tx_ref}`);
+        // Update user subscription status here
+    }
+
+    res.status(200).end();
+});
+
+// Payment Routes - Paystack
+app.post('/api/payments/paystack/initialize', async (req, res) => {
+  const { amount, email } = req.body;
+
+  if (!isPaystackConfigured) {
+    return res.json({
+      status: true,
+      message: 'Paystack not configured. Simulated payment link.',
+      data: {
+        authorization_url: 'https://checkout.paystack.com/mock-session'
+      },
+      isMock: true
+    });
+  }
+
+  try {
+    const response = await axios.post('https://api.paystack.co/transaction/initialize', {
+      email: email || (req.user ? req.user.email : 'guest@example.com'),
+      amount: (amount || 29) * 100, // Paystack amount is in kobo/cents
+      callback_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback`
+    }, {
+      headers: {
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error('Paystack initialization error:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to initialize Paystack payment' });
+  }
+});
+
+app.post('/api/payments/paystack/webhook', async (req, res) => {
+    // Verify signature in production
+    const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY).update(JSON.stringify(req.body)).digest('hex');
+    if (hash !== req.headers['x-paystack-signature']) {
+        return res.status(401).end();
+    }
+
+    const event = req.body;
+    if (event.event === 'charge.success') {
+        console.log(`Paystack payment successful for ${event.data.customer.email}`);
+        // Update user subscription status here
+    }
+
+    res.status(200).end();
 });
 
 app.post('/api/ml/tools', async (req, res) => {
