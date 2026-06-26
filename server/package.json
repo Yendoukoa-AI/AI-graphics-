@@ -44,6 +44,7 @@
     "paystack-api": "^2.0.6",
     "puppeteer": "^25.1.0",
     "sequelize": "^6.37.8",
-    "sqlite3": "^6.0.1"
+    "sqlite3": "^6.0.1",
+    "stripe": "^22.3.0"
   }
 }

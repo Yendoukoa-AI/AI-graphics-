@@ -29,6 +29,7 @@ const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 const cloudinary = require('cloudinary').v2;
 const Flutterwave = require('flutterwave-node-v3');
 const paystack = require('paystack-api');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'dummy_key');
 const { sequelize, User } = require('./models');
 const { Op } = require('sequelize');
 require('dotenv').config();
@@ -61,6 +62,42 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
+
+// Stripe webhook must be defined before express.json() to get raw body
+app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    if (process.env.STRIPE_WEBHOOK_SECRET) {
+      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    } else {
+      // Fallback for development if secret not set (NOT FOR PRODUCTION)
+      try {
+        event = JSON.parse(req.body.toString());
+      } catch (e) {
+        event = req.body;
+      }
+    }
+  } catch (err) {
+    console.error(`Webhook Error: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      const session = event.data.object;
+      console.log(`Stripe Payment successful for ${session.customer_email}`);
+      // Update user subscription status here
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({ received: true });
+});
+
 app.use(express.json());
 
 // Session configuration
@@ -356,6 +393,9 @@ const flw = isFlutterwaveConfigured ? new Flutterwave(process.env.FLUTTERWAVE_PU
 // Initialize Paystack
 const isPaystackConfigured = !!process.env.PAYSTACK_SECRET_KEY;
 const paystackClient = isPaystackConfigured ? paystack(process.env.PAYSTACK_SECRET_KEY) : null;
+
+// Initialize Stripe
+const isStripeConfigured = !!process.env.STRIPE_SECRET_KEY;
 
 app.post('/api/generate', async (req, res) => {
   let { prompt, mode, product, provider = 'google', useRAG = false, fineTunedModel = null } = req.body;
@@ -1431,6 +1471,81 @@ app.post('/api/payments/flutterwave/webhook', async (req, res) => {
     }
 
     res.status(200).end();
+});
+
+// Unified Global Payment Route
+app.post('/api/payments/initialize', async (req, res) => {
+  const { gateway, amount, email, name } = req.body;
+  const userEmail = email || (req.user ? req.user.email : 'guest@example.com');
+  const userName = name || (req.user ? req.user.displayName : 'Guest User');
+
+  switch (gateway) {
+    case 'stripe':
+      if (!isStripeConfigured) {
+        return res.json({ id: `session-mock-${Date.now()}`, url: 'https://checkout.stripe.com/mock-session', isMock: true });
+      }
+      try {
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card', 'us_bank_account', 'sepa_debit', 'sofort', 'giropay', 'alipay'],
+          customer_email: userEmail,
+          line_items: [{
+            price_data: {
+              currency: 'usd',
+              product_data: { name: 'DesignAI Studio Pro', description: 'Upgrade to Pro Plan' },
+              unit_amount: (amount || 29) * 100,
+            },
+            quantity: 1,
+          }],
+          mode: 'payment',
+          success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback?session_id={CHECKOUT_SESSION_ID}&gateway=stripe`,
+          cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/pricing`,
+        });
+        return res.json({ id: session.id, url: session.url });
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
+
+    case 'flutterwave':
+      if (!isFlutterwaveConfigured) {
+        return res.json({ status: 'success', data: { link: 'https://flutterwave.com/pay/mock-session' }, isMock: true });
+      }
+      try {
+        const payload = {
+          tx_ref: `tx-${Date.now()}`,
+          amount: amount || '29',
+          currency: 'USD',
+          redirect_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback`,
+          customer: { email: userEmail, name: userName },
+          customizations: { title: 'DesignAI Studio Pro', description: 'Upgrade to Pro Plan' }
+        };
+        const initResponse = await axios.post('https://api.flutterwave.com/v3/payments', payload, {
+          headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}` }
+        });
+        return res.json(initResponse.data);
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
+
+    case 'paystack':
+      if (!isPaystackConfigured) {
+        return res.json({ status: true, data: { authorization_url: 'https://checkout.paystack.com/mock-session' }, isMock: true });
+      }
+      try {
+        const response = await axios.post('https://api.paystack.co/transaction/initialize', {
+          email: userEmail,
+          amount: (amount || 29) * 100,
+          callback_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback`
+        }, {
+          headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' }
+        });
+        return res.json(response.data);
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
+
+    default:
+      return res.status(400).json({ error: 'Invalid payment gateway' });
+  }
 });
 
 // Payment Routes - Paystack

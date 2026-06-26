@@ -419,10 +419,15 @@ function App() {
 
   const handlePayment = async (gateway, amount) => {
     try {
-      const response = await fetch(`${API_URL}/api/payments/${gateway}/initialize`, {
+      const response = await fetch(`${API_URL}/api/payments/initialize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, email: user?.email }),
+        body: JSON.stringify({
+          gateway,
+          amount,
+          email: user?.email,
+          name: user?.displayName
+        }),
         credentials: 'include'
       });
       const data = await response.json();
@@ -432,6 +437,9 @@ function App() {
         if (link) window.location.href = link;
       } else if (gateway === 'paystack') {
         const link = data.data?.authorization_url || data.authorization_url;
+        if (link) window.location.href = link;
+      } else if (gateway === 'stripe') {
+        const link = data.url;
         if (link) window.location.href = link;
       }
     } catch (error) {
@@ -1074,6 +1082,7 @@ function App() {
               <li>{t('price_priority_support')}</li>
             </ul>
             <div className="payment-options" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <button className="pricing-btn" style={{ background: '#6366f1', border: 'none', color: 'white' }} onClick={() => handlePayment('stripe', 29)}>Pay with Stripe (Global)</button>
               <button className="pricing-btn primary" onClick={() => handlePayment('flutterwave', 29)}>Pay with Flutterwave</button>
               <button className="pricing-btn" style={{ background: '#00bb77', border: 'none', color: 'white' }} onClick={() => handlePayment('paystack', 29)}>Pay with Paystack</button>
             </div>
