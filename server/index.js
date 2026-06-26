@@ -420,6 +420,8 @@ app.post('/api/generate', async (req, res) => {
     else if (lowerPrompt.includes('game')) detectedMode = 'games';
     else if (lowerPrompt.includes('finetune') || lowerPrompt.includes('train')) detectedMode = 'finetuning';
     else if (lowerPrompt.includes('map') || lowerPrompt.includes('location') || lowerPrompt.includes('place')) detectedMode = 'maps';
+    else if (lowerPrompt.includes('photoshop') || lowerPrompt.includes('edit') || lowerPrompt.includes('remove background')) detectedMode = 'photoshop';
+    else if (lowerPrompt.includes('generate') || lowerPrompt.includes('draw') || lowerPrompt.includes('image gen')) detectedMode = 'image-gen';
     else if (lowerPrompt.includes('health') || lowerPrompt.includes('medical') || lowerPrompt.includes('doctor')) detectedMode = 'health';
     else if (lowerPrompt.includes('finance') || lowerPrompt.includes('bank') || lowerPrompt.includes('money')) detectedMode = 'finance';
     else if (lowerPrompt.includes('education') || lowerPrompt.includes('learn') || lowerPrompt.includes('school')) detectedMode = 'education';
@@ -599,6 +601,12 @@ app.post('/api/generate', async (req, res) => {
     } else if (detectedMode === 'ml-tools') {
       systemPrompt = "You are a machine learning and data science tools expert. ALWAYS respond in the same language as the user's prompt.";
       humanPrompt = `Provide a short, professional insight (2 sentences) for this ML tool or data task: "${prompt}"`;
+    } else if (detectedMode === 'photoshop') {
+      systemPrompt = "You are a professional photo editor and Photoshop expert. ALWAYS respond in the same language as the user's prompt.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this Photoshop/image editing request: "${prompt}"`;
+    } else if (detectedMode === 'image-gen') {
+      systemPrompt = "You are a professional AI image generation expert. ALWAYS respond in the same language as the user's prompt.";
+      humanPrompt = `Provide a short, professional insight (2 sentences) for this AI image generation request: "${prompt}"`;
     }
 
     // Simulated RAG Logic
@@ -1490,6 +1498,42 @@ app.post('/api/create-checkout-session', async (req, res) => {
   } catch (error) {
     console.error('Stripe session creation error:', error);
     res.status(500).json({ error: 'Failed to create Stripe session' });
+  }
+});
+
+app.post('/api/photoshop/process', async (req, res) => {
+  const { task, imageUrl } = req.body;
+
+  if (!imageUrl || !task) {
+    return res.status(400).json({ error: 'imageUrl and task are required' });
+  }
+
+  try {
+    let processedImageUrl = imageUrl;
+    let messageKey = 'retouch_complete';
+
+    // Mock processing logic consistent with existing patterns
+    // In a real implementation, you would call APIs like remove.bg, Cloudinary, or OpenAI
+    if (task === 'remove-bg') {
+      // For mock, we append a query param or use a different placeholder
+      processedImageUrl = `https://loremflickr.com/800/600/transparent,png?random=${Date.now()}`;
+      messageKey = 'bg_removed';
+    } else if (task === 'upscale') {
+      processedImageUrl = imageUrl.includes('?') ? `${imageUrl}&upscale=true` : `${imageUrl}?upscale=true`;
+      messageKey = 'image_upscaled';
+    } else if (task === 'enhance') {
+      processedImageUrl = imageUrl.includes('?') ? `${imageUrl}&enhance=true` : `${imageUrl}?enhance=true`;
+      messageKey = 'photo_enhanced';
+    }
+
+    res.json({
+      success: true,
+      imageUrl: processedImageUrl,
+      messageKey
+    });
+  } catch (error) {
+    console.error('Error with Photoshop processing:', error);
+    res.status(500).json({ error: 'Failed to process image' });
   }
 });
 

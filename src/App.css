@@ -850,6 +850,32 @@ body {
   gap: 0.5rem;
 }
 
+.photoshop-quick-tools {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.ps-tool-btn {
+  flex: 1;
+  min-width: 120px;
+  font-size: 0.75rem !important;
+  padding: 0.5rem 0.75rem !important;
+  background: rgba(168, 85, 247, 0.1) !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+  color: #d8b4fe !important;
+}
+
+.ps-tool-btn:hover:not(:disabled) {
+  background: rgba(168, 85, 247, 0.2) !important;
+  border-color: var(--secondary-color) !important;
+}
+
+.ps-tool-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .pricing-card li::before {
   content: '✓';
   color: var(--primary-color);
