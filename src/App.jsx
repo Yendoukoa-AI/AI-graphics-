@@ -65,6 +65,7 @@ function App() {
   const [mlTask, setMlTask] = useState('summarization');
   const [mlResult, setMlResult] = useState('');
   const [isProcessingMl, setIsProcessingMl] = useState(false);
+  const [isProcessingPhotoshop, setIsProcessingPhotoshop] = useState(false);
   const [fineTuningJobs, setFineTuningJobs] = useState([]);
   const [fineTunedModelsList, setFineTunedModelsList] = useState([]);
   const [selectedFineTunedModel, setSelectedFineTunedModel] = useState(null);
@@ -469,6 +470,34 @@ function App() {
       setMlResult('Failed to perform ML task.');
     } finally {
       setIsProcessingMl(false);
+    }
+  };
+
+  const handlePhotoshopTask = async (task, imageUrl) => {
+    if (!imageUrl) return;
+    setIsProcessingPhotoshop(true);
+    const API_URL = import.meta.env.VITE_API_URL || '';
+    try {
+      const response = await fetch(`${API_URL}/api/photoshop/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ task, imageUrl }),
+      });
+      const data = await response.json();
+      if (data.imageUrl) {
+        setPreviewImage(data.imageUrl);
+        alert(t(data.messageKey || 'retouch_complete'));
+      } else {
+        alert('Photoshop tool failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error with Photoshop task:', error);
+      alert('Failed to connect to Photoshop service.');
+    } finally {
+      setIsProcessingPhotoshop(false);
     }
   };
 
@@ -1287,6 +1316,8 @@ function App() {
                         <option value="desktop">{t('mode_desktop')}</option>
                         <option value="graphics">{t('mode_graphics')}</option>
                         <option value="posters">{t('mode_posters')}</option>
+                        <option value="photoshop">{t('mode_photoshop')}</option>
+                        <option value="image-gen">{t('mode_image_gen')}</option>
                       </optgroup>
                       <optgroup label={t('opt_creative_ai')}>
                         <option value="cinema">{t('mode_cinema')}</option>
@@ -1556,6 +1587,8 @@ function App() {
                 mode === 'aws' ? t('placeholder_aws') :
                 mode === 'web3' ? t('placeholder_web3') :
                 mode === 'ml-tools' ? t('placeholder_ml_tools') :
+                mode === 'photoshop' ? t('placeholder_photoshop') :
+                mode === 'image-gen' ? t('placeholder_image_gen') :
                 t('placeholder_default')
               }
                 value={prompt}
@@ -1597,10 +1630,14 @@ function App() {
           )}
 
           <div className="preview-area">
-            {(isGenerating || isProcessingMl) && (
+            {(isGenerating || isProcessingMl || isProcessingPhotoshop) && (
               <div className="loading-overlay">
                 <div className="spinner"></div>
-                <p>{isProcessingMl ? t('ml_analysis') : t('ai_thinking')}</p>
+                <p>
+                  {isProcessingMl ? t('ml_analysis') :
+                   isProcessingPhotoshop ? t('processing_photoshop') :
+                   t('ai_thinking')}
+                </p>
               </div>
             )}
             {previewImage || previewVideo || langflowResponse || mlResult ? (
@@ -1684,6 +1721,17 @@ function App() {
                           >
                             {isUploadingToCloudinary ? '☁️ Uploading...' : '☁️ Save to Cloudinary'}
                           </button>
+                          <div className="photoshop-quick-tools" style={{ display: 'flex', gap: '0.5rem', width: '100%', marginTop: '0.5rem' }}>
+                            <button className="secondary-button ps-tool-btn" onClick={() => handlePhotoshopTask('remove-bg', previewImage)} disabled={isProcessingPhotoshop}>
+                              ✂️ {t('remove_bg')}
+                            </button>
+                            <button className="secondary-button ps-tool-btn" onClick={() => handlePhotoshopTask('upscale', previewImage)} disabled={isProcessingPhotoshop}>
+                              🔍 {t('upscale_image')}
+                            </button>
+                            <button className="secondary-button ps-tool-btn" onClick={() => handlePhotoshopTask('enhance', previewImage)} disabled={isProcessingPhotoshop}>
+                              ✨ {t('enhance_photo')}
+                            </button>
+                          </div>
                         </>
                       )}
                       {previewVideo && (
