@@ -29,9 +29,10 @@ const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 const cloudinary = require('cloudinary').v2;
 const Flutterwave = require('flutterwave-node-v3');
 const paystack = require('paystack-api');
+require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_mock');
 const { sequelize, User } = require('./models');
 const { Op } = require('sequelize');
-require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -61,6 +62,43 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
+// Webhook route must be before express.json() to get raw body
+app.post('/api/payments/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+
+  if (endpointSecret && sig) {
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    } catch (err) {
+      console.error(`Webhook Error: ${err.message}`);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  } else {
+    try {
+      event = JSON.parse(req.body.toString());
+    } catch (err) {
+      console.error(`Webhook Parse Error: ${err.message}`);
+      return res.status(400).send(`Webhook Parse Error: ${err.message}`);
+    }
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      const session = event.data.object;
+      console.log(`Payment successful for Stripe session ${session.id}`);
+      // Update user subscription status here based on session.customer_email or client_reference_id
+      break;
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({ received: true });
+});
+
 app.use(express.json());
 
 // Session configuration
@@ -356,6 +394,9 @@ const flw = isFlutterwaveConfigured ? new Flutterwave(process.env.FLUTTERWAVE_PU
 // Initialize Paystack
 const isPaystackConfigured = !!process.env.PAYSTACK_SECRET_KEY;
 const paystackClient = isPaystackConfigured ? paystack(process.env.PAYSTACK_SECRET_KEY) : null;
+
+// Initialize Stripe
+const isStripeConfigured = !!process.env.STRIPE_SECRET_KEY;
 
 app.post('/api/generate', async (req, res) => {
   let { prompt, mode, product, provider = 'google', useRAG = false, fineTunedModel = null } = req.body;
@@ -1481,6 +1522,45 @@ app.post('/api/payments/paystack/webhook', async (req, res) => {
     }
 
     res.status(200).end();
+});
+
+// Stripe Routes
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { amount, planName } = req.body;
+
+  if (!isStripeConfigured) {
+    return res.json({
+      url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback?status=success&gateway=stripe&isMock=true`,
+      isMock: true
+    });
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: planName || 'DesignAI Studio Pro',
+            },
+            unit_amount: (amount || 29) * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback?status=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback?status=cancel`,
+      customer_email: req.user ? req.user.email : undefined,
+    });
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Stripe session creation error:', error);
+    res.status(500).json({ error: 'Failed to create Stripe session' });
+  }
 });
 
 app.post('/api/ml/tools', async (req, res) => {
