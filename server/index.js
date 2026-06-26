@@ -27,7 +27,6 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
 const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 const cloudinary = require('cloudinary').v2;
-const paystack = require('paystack-api');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_mock');
 const { sequelize, User } = require('./models');
@@ -385,10 +384,6 @@ if (isCloudinaryConfigured) {
     api_secret: process.env.CLOUDINARY_API_SECRET
   });
 }
-
-// Initialize Paystack
-const isPaystackConfigured = !!process.env.PAYSTACK_SECRET_KEY;
-const paystackClient = isPaystackConfigured ? paystack(process.env.PAYSTACK_SECRET_KEY) : null;
 
 // Initialize Stripe
 const isStripeConfigured = !!process.env.STRIPE_SECRET_KEY;
@@ -1402,56 +1397,6 @@ app.post('/api/cloudinary/upload', async (req, res) => {
     console.error('Cloudinary upload error:', error);
     res.status(500).json({ error: 'Failed to upload to Cloudinary', details: error.message });
   }
-});
-
-// Payment Routes - Paystack
-app.post('/api/payments/paystack/initialize', async (req, res) => {
-  const { amount, email } = req.body;
-
-  if (!isPaystackConfigured) {
-    return res.json({
-      status: true,
-      message: 'Paystack not configured. Simulated payment link.',
-      data: {
-        authorization_url: 'https://checkout.paystack.com/mock-session'
-      },
-      isMock: true
-    });
-  }
-
-  try {
-    const response = await axios.post('https://api.paystack.co/transaction/initialize', {
-      email: email || (req.user ? req.user.email : 'guest@example.com'),
-      amount: (amount || 29) * 100, // Paystack amount is in kobo/cents
-      callback_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback`
-    }, {
-      headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    res.json(response.data);
-  } catch (error) {
-    console.error('Paystack initialization error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Failed to initialize Paystack payment' });
-  }
-});
-
-app.post('/api/payments/paystack/webhook', async (req, res) => {
-    // Verify signature in production
-    const hash = crypto.createHmac('sha512', process.env.PAYSTACK_SECRET_KEY).update(JSON.stringify(req.body)).digest('hex');
-    if (hash !== req.headers['x-paystack-signature']) {
-        return res.status(401).end();
-    }
-
-    const event = req.body;
-    if (event.event === 'charge.success') {
-        console.log(`Paystack payment successful for ${event.data.customer.email}`);
-        // Update user subscription status here
-    }
-
-    res.status(200).end();
 });
 
 // Stripe Routes

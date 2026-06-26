@@ -40,7 +40,6 @@
     "passport-facebook": "^3.0.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
-    "paystack-api": "^2.0.6",
     "puppeteer": "^25.1.0",
     "sequelize": "^6.37.8",
     "sqlite3": "^6.0.1",

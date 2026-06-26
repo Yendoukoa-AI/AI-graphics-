@@ -439,9 +439,6 @@ function App() {
 
       if (gateway === 'stripe') {
         if (data.url) window.location.href = data.url;
-      } else if (gateway === 'paystack') {
-        const link = data.data?.authorization_url || data.authorization_url;
-        if (link) window.location.href = link;
       }
     } catch (error) {
       console.error(`Error initializing ${gateway} payment:`, error);
@@ -1084,7 +1081,6 @@ function App() {
             </ul>
             <div className="payment-options" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <button className="pricing-btn primary" onClick={() => handlePayment('stripe', 29)}>Pay with Stripe</button>
-              <button className="pricing-btn" style={{ background: '#00bb77', border: 'none', color: 'white' }} onClick={() => handlePayment('paystack', 29)}>Pay with Paystack</button>
             </div>
           </div>
           <div className="pricing-card">
