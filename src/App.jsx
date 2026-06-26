@@ -58,6 +58,8 @@ function App() {
   const [mapCenter, setMapCenter] = useState([37.7749, -122.4194]); // Default to SF
   const [isTakingScreenshot, setIsTakingScreenshot] = useState(false);
   const [screenshotResult, setScreenshotResult] = useState(null);
+  const [cloudinaryUrl, setCloudinaryUrl] = useState(null);
+  const [isUploadingToCloudinary, setIsUploadingToCloudinary] = useState(false);
   const [provider, setProvider] = useState('google');
   const [useRAG, setUseRAG] = useState(false);
   const [mlTask, setMlTask] = useState('summarization');
@@ -387,6 +389,54 @@ function App() {
       alert('Error posting to Facebook. Make sure you are logged in with Facebook.');
     } finally {
       setIsPostingToFacebook(false);
+    }
+  };
+
+  const handleCloudinaryUpload = async () => {
+    if (!previewImage) return;
+    setIsUploadingToCloudinary(true);
+    try {
+      const response = await fetch(`${API_URL}/api/cloudinary/upload`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: previewImage }),
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data.secure_url) {
+        setCloudinaryUrl(data.secure_url);
+        alert('Successfully uploaded to Cloudinary!');
+      } else {
+        alert('Failed to upload to Cloudinary: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error uploading to Cloudinary:', error);
+      alert('Error uploading to Cloudinary.');
+    } finally {
+      setIsUploadingToCloudinary(false);
+    }
+  };
+
+  const handlePayment = async (gateway, amount) => {
+    try {
+      const response = await fetch(`${API_URL}/api/payments/${gateway}/initialize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, email: user?.email }),
+        credentials: 'include'
+      });
+      const data = await response.json();
+
+      if (gateway === 'flutterwave') {
+        const link = data.data?.link || data.link;
+        if (link) window.location.href = link;
+      } else if (gateway === 'paystack') {
+        const link = data.data?.authorization_url || data.authorization_url;
+        if (link) window.location.href = link;
+      }
+    } catch (error) {
+      console.error(`Error initializing ${gateway} payment:`, error);
+      alert(`Failed to initialize ${gateway} payment.`);
     }
   };
 
@@ -1023,7 +1073,10 @@ function App() {
               <li>HD Export Options</li>
               <li>{t('price_priority_support')}</li>
             </ul>
-            <button className="pricing-btn primary">{t('upgrade_pro')}</button>
+            <div className="payment-options" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <button className="pricing-btn primary" onClick={() => handlePayment('flutterwave', 29)}>Pay with Flutterwave</button>
+              <button className="pricing-btn" style={{ background: '#00bb77', border: 'none', color: 'white' }} onClick={() => handlePayment('paystack', 29)}>Pay with Paystack</button>
+            </div>
           </div>
           <div className="pricing-card">
             <h3>{t('price_enterprise')}</h3>
@@ -1611,9 +1664,18 @@ function App() {
                         {isTakingScreenshot ? `📸 ${t('capturing')}` : `📸 ${t('take_screenshot')}`}
                       </button>
                       {previewImage && (
-                        <button className="secondary-button download-btn" onClick={() => downloadMedia(previewImage, `design-${Date.now()}.jpg`)}>
-                          📥 {t('download_image')}
-                        </button>
+                        <>
+                          <button className="secondary-button download-btn" onClick={() => downloadMedia(previewImage, `design-${Date.now()}.jpg`)}>
+                            📥 {t('download_image')}
+                          </button>
+                          <button
+                            className="secondary-button cloudinary-btn"
+                            onClick={handleCloudinaryUpload}
+                            disabled={isUploadingToCloudinary}
+                          >
+                            {isUploadingToCloudinary ? '☁️ Uploading...' : '☁️ Save to Cloudinary'}
+                          </button>
+                        </>
                       )}
                       {previewVideo && (
                         <button className="secondary-button download-btn" onClick={() => downloadMedia(previewVideo, `video-${Date.now()}.mp4`)}>
@@ -1648,6 +1710,12 @@ function App() {
                           {isListing ? t('listing_marketplace') : listSuccess ? '✅ ' + t('listed_marketplace') : '🚀 ' + t('list_for_sale')}
                         </button>
                         {listSuccess && <p className="success-msg">{t('design_live')}</p>}
+                      </div>
+                    )}
+                    {cloudinaryUrl && (
+                      <div className="cloudinary-result-box" style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(96, 165, 250, 0.1)', borderRadius: '0.5rem', border: '1px solid rgba(96, 165, 250, 0.2)' }}>
+                        <p style={{ margin: 0, fontSize: '0.9rem' }}><strong>Cloudinary URL:</strong></p>
+                        <a href={cloudinaryUrl} target="_blank" rel="noopener noreferrer" style={{ wordBreak: 'break-all', fontSize: '0.8rem', color: '#60a5fa' }}>{cloudinaryUrl}</a>
                       </div>
                     )}
                     {screenshotResult && (
