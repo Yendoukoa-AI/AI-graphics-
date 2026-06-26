@@ -419,15 +419,27 @@ function App() {
 
   const handlePayment = async (gateway, amount) => {
     try {
-      const response = await fetch(`${API_URL}/api/payments/${gateway}/initialize`, {
+      let endpoint;
+      let payload = { amount, email: user?.email };
+
+      if (gateway === 'stripe') {
+        endpoint = `${API_URL}/api/create-checkout-session`;
+        payload.planName = 'DesignAI Studio Pro';
+      } else {
+        endpoint = `${API_URL}/api/payments/${gateway}/initialize`;
+      }
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, email: user?.email }),
+        body: JSON.stringify(payload),
         credentials: 'include'
       });
       const data = await response.json();
 
-      if (gateway === 'flutterwave') {
+      if (gateway === 'stripe') {
+        if (data.url) window.location.href = data.url;
+      } else if (gateway === 'flutterwave') {
         const link = data.data?.link || data.link;
         if (link) window.location.href = link;
       } else if (gateway === 'paystack') {
@@ -1074,7 +1086,8 @@ function App() {
               <li>{t('price_priority_support')}</li>
             </ul>
             <div className="payment-options" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <button className="pricing-btn primary" onClick={() => handlePayment('flutterwave', 29)}>Pay with Flutterwave</button>
+              <button className="pricing-btn primary" onClick={() => handlePayment('stripe', 29)}>Pay with Stripe</button>
+              <button className="pricing-btn" style={{ background: '#f59e0b', border: 'none', color: 'white' }} onClick={() => handlePayment('flutterwave', 29)}>Pay with Flutterwave</button>
               <button className="pricing-btn" style={{ background: '#00bb77', border: 'none', color: 'white' }} onClick={() => handlePayment('paystack', 29)}>Pay with Paystack</button>
             </div>
           </div>
