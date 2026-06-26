@@ -439,9 +439,6 @@ function App() {
 
       if (gateway === 'stripe') {
         if (data.url) window.location.href = data.url;
-      } else if (gateway === 'flutterwave') {
-        const link = data.data?.link || data.link;
-        if (link) window.location.href = link;
       } else if (gateway === 'paystack') {
         const link = data.data?.authorization_url || data.authorization_url;
         if (link) window.location.href = link;
@@ -1087,7 +1084,6 @@ function App() {
             </ul>
             <div className="payment-options" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <button className="pricing-btn primary" onClick={() => handlePayment('stripe', 29)}>Pay with Stripe</button>
-              <button className="pricing-btn" style={{ background: '#f59e0b', border: 'none', color: 'white' }} onClick={() => handlePayment('flutterwave', 29)}>Pay with Flutterwave</button>
               <button className="pricing-btn" style={{ background: '#00bb77', border: 'none', color: 'white' }} onClick={() => handlePayment('paystack', 29)}>Pay with Paystack</button>
             </div>
           </div>

@@ -27,7 +27,6 @@ const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
 const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 const cloudinary = require('cloudinary').v2;
-const Flutterwave = require('flutterwave-node-v3');
 const paystack = require('paystack-api');
 require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_mock');
@@ -386,10 +385,6 @@ if (isCloudinaryConfigured) {
     api_secret: process.env.CLOUDINARY_API_SECRET
   });
 }
-
-// Initialize Flutterwave
-const isFlutterwaveConfigured = !!(process.env.FLUTTERWAVE_PUBLIC_KEY && process.env.FLUTTERWAVE_SECRET_KEY);
-const flw = isFlutterwaveConfigured ? new Flutterwave(process.env.FLUTTERWAVE_PUBLIC_KEY, process.env.FLUTTERWAVE_SECRET_KEY) : null;
 
 // Initialize Paystack
 const isPaystackConfigured = !!process.env.PAYSTACK_SECRET_KEY;
@@ -1407,71 +1402,6 @@ app.post('/api/cloudinary/upload', async (req, res) => {
     console.error('Cloudinary upload error:', error);
     res.status(500).json({ error: 'Failed to upload to Cloudinary', details: error.message });
   }
-});
-
-// Payment Routes - Flutterwave
-app.post('/api/payments/flutterwave/initialize', async (req, res) => {
-  const { amount, email, name } = req.body;
-
-  if (!isFlutterwaveConfigured) {
-    return res.json({
-      status: 'success',
-      message: 'Flutterwave not configured. Simulated payment link.',
-      data: {
-        link: 'https://flutterwave.com/pay/mock-session'
-      },
-      isMock: true
-    });
-  }
-
-  try {
-    const payload = {
-      tx_ref: `tx-${Date.now()}`,
-      amount: amount || '29',
-      currency: 'USD',
-      redirect_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/payment-callback`,
-      customer: {
-        email: email || (req.user ? req.user.email : 'guest@example.com'),
-        name: name || (req.user ? req.user.displayName : 'Guest User'),
-      },
-      customizations: {
-        title: 'DesignAI Studio Pro',
-        description: 'Upgrade to Pro Plan',
-        logo: 'https://designai-studio.com/logo.png'
-      }
-    };
-
-    // Use axios for a direct call to the standard transaction flow
-    const initResponse = await axios.post('https://api.flutterwave.com/v3/payments', payload, {
-        headers: {
-            Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`
-        }
-    });
-
-    res.json(initResponse.data);
-  } catch (error) {
-    console.error('Flutterwave initialization error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Failed to initialize Flutterwave payment' });
-  }
-});
-
-app.post('/api/payments/flutterwave/webhook', async (req, res) => {
-    // Verify webhook signature in production
-    const secretHash = process.env.FLUTTERWAVE_WEBHOOK_HASH;
-    const signature = req.headers['verif-hash'];
-
-    if (secretHash && signature !== secretHash) {
-        return res.status(401).end();
-    }
-
-    const { status, tx_ref, id } = req.body.data || req.body;
-
-    if (status === 'successful') {
-        console.log(`Payment successful for transaction ${tx_ref}`);
-        // Update user subscription status here
-    }
-
-    res.status(200).end();
 });
 
 // Payment Routes - Paystack
