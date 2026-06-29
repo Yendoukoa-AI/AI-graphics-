@@ -5,6 +5,13 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './App.css';
 
+// Components
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import Features from './components/Features';
+import Pricing from './components/Pricing';
+import Footer from './components/Footer';
+
 // Fix for Leaflet marker icon issue in React
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -74,10 +81,21 @@ function App() {
   const [newPassword, setNewPassword] = useState('');
   const [language, setLanguage] = useState('en');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const t = (key) => translations[language][key] || translations['en'][key];
 
-  const API_URL = import.meta.env.VITE_API_URL || '';
+  // Consolidate API_URL and handle relative paths for tests/environments
+  const getApiUrl = () => {
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (envUrl) return envUrl;
+    if (typeof window !== 'undefined' && window.location.origin) {
+      return window.location.origin;
+    }
+    return 'http://localhost:3000';
+  };
+
+  const API_URL = getApiUrl();
 
   useEffect(() => {
     fetchUser();
@@ -222,7 +240,6 @@ function App() {
 
   const fetchShoplineProducts = async () => {
     setIsFetchingProducts(true);
-    const API_URL = import.meta.env.VITE_API_URL || '';
     try {
       const response = await fetch(`${API_URL}/api/shopline/products`, {
         credentials: 'include'
@@ -239,7 +256,6 @@ function App() {
   const fetchDropshipperSuggestions = async () => {
     if (!niche) return;
     setIsFetchingSuggestions(true);
-    const API_URL = import.meta.env.VITE_API_URL || '';
     try {
       const response = await fetch(`${API_URL}/api/dropshipper/suggestions`, {
         method: 'POST',
@@ -473,7 +489,6 @@ function App() {
   const handlePhotoshopTask = async (task, imageUrl) => {
     if (!imageUrl) return;
     setIsProcessingPhotoshop(true);
-    const API_URL = import.meta.env.VITE_API_URL || '';
     try {
       const response = await fetch(`${API_URL}/api/photoshop/process`, {
         method: 'POST',
@@ -580,7 +595,6 @@ function App() {
     setPreviewVideo(null);
     setLangflowResponse('');
     setAiInsight('');
-    const API_URL = import.meta.env.VITE_API_URL || '';
 
     let result = {
       prompt,
@@ -679,7 +693,6 @@ function App() {
     setIsDeploying(true);
     setDeployUrl('');
     setRepoUrl('');
-    const API_URL = import.meta.env.VITE_API_URL || '';
     try {
       const response = await fetch(`${API_URL}/api/github/deploy`, {
         method: 'POST',
@@ -709,7 +722,6 @@ function App() {
   };
 
   const fetchCopilotSuggestion = async () => {
-    const API_URL = import.meta.env.VITE_API_URL || '';
     try {
       const response = await fetch(`${API_URL}/api/github/copilot-suggestion`, {
         method: 'POST',
@@ -853,277 +865,23 @@ function App() {
           </div>
         </div>
       )}
-      <nav className="navbar">
-        <div className="logo">{t('logo_text')}</div>
-        <div className="nav-links">
-          <a href="#features">{t('features')}</a>
-          <a href="#editor">{t('editor')}</a>
-          <a href="#pricing">{t('pricing')}</a>
-          <a href="#showcase">{t('showcase')}</a>
-          <a href="https://github.com/GYFX35/AI-graphics-/releases" target="_blank" rel="noopener noreferrer">{t('github_session')}</a>
-        </div>
-        <div className="nav-actions">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="language-selector"
-          >
-            <option value="en">{t('lang_en')}</option>
-            <option value="fr">{t('lang_fr')}</option>
-            <option value="es">{t('lang_es')}</option>
-            <option value="zh">{t('lang_zh')}</option>
-            <option value="ja">{t('lang_ja')}</option>
-            <option value="ar">{t('lang_ar')}</option>
-          </select>
-          <button className="sponsor-button" onClick={() => document.getElementById('sponsorship')?.scrollIntoView({ behavior: 'smooth' })}>{t('sponsor')}</button>
-          {user ? (
-            <div className="user-profile">
-              <img src={user.photos?.[0]?.value || `https://ui-avatars.com/api/?name=${user.displayName}`} alt={user.displayName} className="user-avatar" />
-              <div className="user-dropdown">
-                <span>{user.displayName}</span>
-                <a href={`${API_URL}/auth/logout`} className="logout-link">{t('logout')}</a>
-              </div>
-            </div>
-          ) : (
-            <div className="auth-buttons">
-              <button
-                className="cta-button login-btn email"
-                onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
-              >
-                {t('login_register')}
-              </button>
-              <a href={`${API_URL}/auth/google`} className="cta-button login-btn google">{t('continue_google')}</a>
-              <a href={`${API_URL}/auth/facebook`} className="cta-button login-btn facebook">{t('continue_facebook')}</a>
-            </div>
-          )}
-        </div>
-      </nav>
+      <Navbar
+        t={t}
+        language={language}
+        setLanguage={setLanguage}
+        user={user}
+        API_URL={API_URL}
+        setShowAuthModal={setShowAuthModal}
+        setAuthMode={setAuthMode}
+        setIsMenuOpen={setIsMenuOpen}
+        isMenuOpen={isMenuOpen}
+      />
 
-      <header className="hero">
-        {!user && (
-          <div className="auth-nudge">
-            <span className="nudge-icon">🔒</span>
-            <span>{t('connect_google_nudge')}</span>
-            <a href={`${API_URL}/auth/google`} className="nudge-link">{t('connect_now')}</a>
-          </div>
-        )}
-        <div className="hero-badge">{t('hero_badge')}</div>
-        <h1>{t('hero_title_1')} <br /> {t('hero_title_2')}</h1>
-        <p>{t('hero_subtitle')}</p>
-        <div className="hero-actions">
-          <button className="cta-button" onClick={() => document.getElementById('editor')?.scrollIntoView({ behavior: 'smooth' })}>{t('try_free')}</button>
-          <a href="#editor" className="secondary-button" style={{ textDecoration: 'none', display: 'inline-block' }}>{t('watch_demo')}</a>
-        </div>
-      </header>
+      <Hero t={t} user={user} API_URL={API_URL} />
 
-      <section className="how-it-works">
-        <h2>{t('how_it_works')}</h2>
-        <div className="steps-grid">
-          <div className="step">
-            <div className="step-number">1</div>
-            <h4>{t('step_1_title')}</h4>
-            <p>{t('step_1_desc')}</p>
-          </div>
-          <div className="step">
-            <div className="step-number">2</div>
-            <h4>{t('step_2_title')}</h4>
-            <p>{t('step_2_desc')}</p>
-          </div>
-          <div className="step">
-            <div className="step-number">3</div>
-            <h4>{t('step_3_title')}</h4>
-            <p>{t('step_3_desc')}</p>
-          </div>
-        </div>
-      </section>
+      <Features t={t} />
 
-      <section className="trust-section">
-        <div className="trust-logos">
-          <span className="logo-item">SHOPLINE</span>
-          <span className="logo-item">NETFLIX</span>
-          <span className="logo-item">SPOTIFY</span>
-          <span className="logo-item">SHOPIFY</span>
-          <span className="logo-item">UNIVERSAL</span>
-        </div>
-      </section>
-
-      <section id="features" className="features">
-        <div className="card">
-          <span className="card-icon">🖼️</span>
-          <h3>{t('posters_feature_title')}</h3>
-          <p>{t('posters_feature_desc')}</p>
-        </div>
-        <div className="card">
-          <span className="card-icon">🌐</span>
-          <h3>{t('web_design_title')}</h3>
-          <p>{t('web_design_desc')}</p>
-        </div>
-        <div className="card">
-          <span className="card-icon">📱</span>
-          <h3>{t('mobile_design_title')}</h3>
-          <p>{t('mobile_design_desc')}</p>
-        </div>
-        <div className="card">
-          <span className="card-icon">💻</span>
-          <h3>{t('desktop_design_title')}</h3>
-          <p>{t('desktop_design_desc')}</p>
-        </div>
-        <div className="card">
-          <span className="card-icon">🎨</span>
-          <h3>{t('graphics_design_title')}</h3>
-          <p>{t('graphics_design_desc')}</p>
-        </div>
-        <div className="card">
-          <span className="card-icon">⚡</span>
-          <h3>{t('realtime_gen_title')}</h3>
-          <p>{t('realtime_gen_desc')}</p>
-        </div>
-      </section>
-
-      <section className="enhancements-section">
-        <div className="section-header">
-          <h2>{t('ai_enhancements')}</h2>
-          <p>{t('ai_enhancements_subtitle')}</p>
-        </div>
-        <div className="features enhancements-grid">
-          <div className="card enhancement-card">
-            <span className="card-icon">🎥</span>
-            <h3>{t('cinema_ai_title')}</h3>
-            <p>{t('cinema_ai_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">🎵</span>
-            <h3>{t('music_ai_title')}</h3>
-            <p>{t('music_ai_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">🌎</span>
-            <h3>{t('global_ent_title')}</h3>
-            <p>{t('global_ent_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">📢</span>
-            <h3>{t('ad_creative_title')}</h3>
-            <p>{t('ad_creative_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">🎮</span>
-            <h3>{t('games_design_title')}</h3>
-            <p>{t('games_design_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">🏎️</span>
-            <h3>{t('automotive_title')}</h3>
-            <p>{t('automotive_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">📦</span>
-            <h3>{t('dropshipper_title')}</h3>
-            <p>{t('dropshipper_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">📡</span>
-            <h3>{t('telecoms_title')}</h3>
-            <p>{t('telecoms_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">📺</span>
-            <h3>{t('medias_title')}</h3>
-            <p>{t('medias_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">📱</span>
-            <h3>{t('social_networks_title')}</h3>
-            <p>{t('social_networks_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">🏆</span>
-            <h3>{t('sports_ai_title')}</h3>
-            <p>{t('sports_ai_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">🏥</span>
-            <h3>{t('health_ai_title')}</h3>
-            <p>{t('health_ai_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">💰</span>
-            <h3>{t('finance_ai_title')}</h3>
-            <p>{t('finance_ai_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">🖌️</span>
-            <h3>{t('art_ai_title')}</h3>
-            <p>{t('art_ai_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">🎓</span>
-            <h3>{t('education_ai_title')}</h3>
-            <p>{t('education_ai_desc')}</p>
-          </div>
-        <div className="card enhancement-card">
-          <span className="card-icon">🗺️</span>
-          <h3>{t('maps_ai_title')}</h3>
-          <p>{t('maps_ai_desc')}</p>
-        </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">🤖</span>
-            <h3>{t('ai_projects_title')}</h3>
-            <p>{t('ai_projects_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">🔗</span>
-            <h3>{t('web3_ai_title')}</h3>
-            <p>{t('web3_ai_desc')}</p>
-          </div>
-          <div className="card enhancement-card">
-            <span className="card-icon">📊</span>
-            <h3>{t('ml_tools_title')}</h3>
-            <p>{t('ml_tools_desc')}</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="pricing" className="pricing">
-        <h2>{t('pricing_title')}</h2>
-        <div className="pricing-grid">
-          <div className="pricing-card">
-            <h3>{t('price_free')}</h3>
-            <div className="price">$0<span>{t('price_month')}</span></div>
-            <ul>
-              <li>5 Generations per month</li>
-              <li>{t('price_basic_templates')}</li>
-              <li>{t('price_standard_quality')}</li>
-            </ul>
-            <button className="pricing-btn" onClick={() => document.getElementById('editor')?.scrollIntoView({ behavior: 'smooth' })}>{t('start_free')}</button>
-          </div>
-          <div className="pricing-card popular">
-            <div className="badge">{t('most_popular')}</div>
-            <h3>{t('price_pro')}</h3>
-            <div className="price">$29<span>{t('price_month')}</span></div>
-            <ul>
-              <li>{t('price_unlimited_gen')}</li>
-              <li>{t('price_photoshop_tools')}</li>
-              <li>HD Export Options</li>
-              <li>{t('price_priority_support')}</li>
-            </ul>
-            <div className="payment-options" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <button className="pricing-btn primary" onClick={() => handlePayment('stripe', 29)}>Pay with Stripe</button>
-            </div>
-          </div>
-          <div className="pricing-card">
-            <h3>{t('price_enterprise')}</h3>
-            <div className="price">{t('price_custom')}</div>
-            <ul>
-              <li>{t('price_custom_training')}</li>
-              <li>API Access</li>
-              <li>{t('price_team_collab')}</li>
-              <li>{t('price_dedicated_manager')}</li>
-            </ul>
-            <button className="pricing-btn" onClick={() => alert('Our sales team will be in touch with you shortly!')}>{t('contact_sales')}</button>
-          </div>
-        </div>
-      </section>
+      <Pricing t={t} handlePayment={handlePayment} />
 
       <section id="ecommerce" className="ecommerce-partnership">
         <div className="partnership-content">
@@ -1859,9 +1617,7 @@ function App() {
         </div>
       </section>
 
-      <footer>
-        <p>&copy; 2026 DesignAI Studio. {t('footer_text')}</p>
-      </footer>
+      <Footer t={t} />
     </div>
   );
 }
