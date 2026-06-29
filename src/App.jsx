@@ -36,6 +36,7 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [authError, setAuthError] = useState('');
@@ -184,7 +185,7 @@ function App() {
     const endpoint = authMode === 'login' ? '/auth/login' : '/auth/register';
     const payload = authMode === 'login'
       ? { email, password }
-      : { email, password, displayName };
+      : { email, password, displayName, phoneNumber };
 
     try {
       console.log(`Attempting ${authMode} at ${API_URL}${endpoint}`);
@@ -209,6 +210,7 @@ function App() {
         setUser(data);
         setShowAuthModal(false);
         setEmail('');
+        setPhoneNumber('');
         setPassword('');
         setDisplayName('');
       } else {
@@ -726,6 +728,41 @@ function App() {
     }
   };
 
+  const handleJoinPartnership = async () => {
+    if (!user) {
+      setAuthMode('login');
+      setShowAuthModal(true);
+      return;
+    }
+
+    if (user.isPartner) {
+      alert(t('join_partnership_success'));
+      return;
+    }
+
+    const phone = prompt(t('enter_partnership_phone'), user.phoneNumber || '');
+    if (!phone) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/partnership/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone }),
+        credentials: 'include'
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert(t('join_partnership_success'));
+        fetchUser(); // Refresh user data
+      } else {
+        alert(data.error || 'Failed to join partnership program');
+      }
+    } catch (error) {
+      console.error('Error joining partnership:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+
   const downloadMedia = async (url, filename) => {
     try {
       const response = await fetch(url);
@@ -767,16 +804,27 @@ function App() {
             {authMessage && <p className="auth-success-msg" style={{ color: '#10b981', marginBottom: '1rem', textAlign: 'center' }}>{authMessage}</p>}
             <form onSubmit={handleAuth}>
               {authMode === 'register' && (
-                <div className="input-field-group">
-                  <label>{t('display_name')}</label>
-                  <input
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="John Doe"
-                    required
-                  />
-                </div>
+                <>
+                  <div className="input-field-group">
+                    <label>{t('display_name')}</label>
+                    <input
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="John Doe"
+                      required
+                    />
+                  </div>
+                  <div className="input-field-group">
+                    <label>{t('phone_number')}</label>
+                    <input
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="+1234567890"
+                    />
+                  </div>
+                </>
               )}
               {(authMode === 'login' || authMode === 'register' || authMode === 'forgot-password' || authMode === 'reset-password') && (
                 <div className="input-field-group">
@@ -1143,7 +1191,7 @@ function App() {
               <p>{t('partnership_sales_desc')}</p>
             </div>
           </div>
-          <button className="cta-button" onClick={() => alert('Thank you for your interest in our Partnership Program! We will contact you soon.')}>{t('partnership_btn')}</button>
+          <button className="cta-button" onClick={handleJoinPartnership}>{t('partnership_btn')}</button>
         </div>
       </section>
 

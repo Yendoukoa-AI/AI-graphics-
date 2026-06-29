@@ -156,13 +156,22 @@ if (isGoogleConfigured) {
       try {
         let user = await User.findOne({ where: { providerId: profile.id, provider: 'google' } });
         if (!user) {
-          user = await User.create({
-            email: profile.emails[0].value,
-            displayName: profile.displayName,
-            provider: 'google',
-            providerId: profile.id,
-            photos: profile.photos
-          });
+          // Check for existing user with same email
+          user = await User.findOne({ where: { email: profile.emails[0].value.toLowerCase() } });
+          if (user) {
+            user.provider = 'google';
+            user.providerId = profile.id;
+            user.photos = profile.photos;
+            await user.save();
+          } else {
+            user = await User.create({
+              email: profile.emails[0].value.toLowerCase(),
+              displayName: profile.displayName,
+              provider: 'google',
+              providerId: profile.id,
+              photos: profile.photos
+            });
+          }
             // Try to sync with AWS if configured
             if (isAwsConfigured && process.env.AWS_USER_TABLE) {
               try {
@@ -193,13 +202,22 @@ if (isFacebookConfigured) {
       try {
         let user = await User.findOne({ where: { providerId: profile.id, provider: 'facebook' } });
         if (!user) {
-          user = await User.create({
-            email: profile.emails ? profile.emails[0].value : `${profile.id}@facebook.com`,
-            displayName: profile.displayName,
-            provider: 'facebook',
-            providerId: profile.id,
-            photos: profile.photos
-          });
+          const email = profile.emails ? profile.emails[0].value.toLowerCase() : `${profile.id}@facebook.com`;
+          user = await User.findOne({ where: { email } });
+          if (user) {
+            user.provider = 'facebook';
+            user.providerId = profile.id;
+            user.photos = profile.photos;
+            await user.save();
+          } else {
+            user = await User.create({
+              email,
+              displayName: profile.displayName,
+              provider: 'facebook',
+              providerId: profile.id,
+              photos: profile.photos
+            });
+          }
         }
         const userObj = user.toJSON();
         userObj.accessToken = accessToken;
@@ -634,8 +652,15 @@ app.post('/api/generate', async (req, res) => {
     const hasVertexConfig = !!process.env.GOOGLE_CLOUD_PROJECT;
     const hasOpenRouterKey = process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY !== 'your_openrouter_api_key_here';
     const hasOpenAIKey = process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'dummy_key';
+    const canUseAI = (provider === 'google' && hasGoogleKey) ||
+                      (provider === 'claude' && hasClaudeKey) ||
+                      (provider === 'vertex' && hasVertexConfig) ||
+                      (provider === 'openrouter' && hasOpenRouterKey) ||
+                      (provider === 'openai' && hasOpenAIKey) ||
+                      (fineTunedModel && hasOpenAIKey) ||
+                      (provider === 'aws' && isAwsConfigured);
 
-    if ((provider === 'google' && hasGoogleKey) || (provider === 'claude' && hasClaudeKey) || (provider === 'vertex' && hasVertexConfig) || (provider === 'openrouter' && hasOpenRouterKey) || (provider === 'openai' && hasOpenAIKey) || (provider === 'aws' && isAwsConfigured)) {
+    if (canUseAI) {
       let insightContent = '';
 
       if (provider === 'aws' && isAwsConfigured) {
@@ -720,7 +745,7 @@ app.post('/api/generate', async (req, res) => {
 
 // Auth Routes
 app.post('/auth/register', async (req, res) => {
-  const { email, password, displayName } = req.body;
+  const { email, password, displayName, phoneNumber } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
@@ -736,6 +761,7 @@ app.post('/auth/register', async (req, res) => {
       email: email.toLowerCase(),
       password: hashedPassword,
       displayName: displayName || email.split('@')[0],
+      phoneNumber: phoneNumber || null,
       photos: [{ value: `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName || email)}` }]
     });
 
@@ -1525,6 +1551,33 @@ app.post('/api/photoshop/process', async (req, res) => {
   } catch (error) {
     console.error('Error with Photoshop processing:', error);
     res.status(500).json({ error: 'Failed to process image' });
+  }
+});
+
+app.post('/api/partnership/join', async (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Please login to join the partnership program' });
+  }
+
+  const { phoneNumber } = req.body;
+  if (!phoneNumber) {
+    return res.status(400).json({ error: 'Phone number is required for partnership' });
+  }
+
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.isPartner = true;
+    user.partnershipPhone = phoneNumber;
+    await user.save();
+
+    res.json({ success: true, message: 'Welcome to the Partnership Program!', user: user.toJSON() });
+  } catch (error) {
+    console.error('Partnership joining error:', error);
+    res.status(500).json({ error: 'Failed to join partnership program' });
   }
 });
 

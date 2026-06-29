@@ -41,6 +41,18 @@ const User = sequelize.define('User', {
     type: DataTypes.JSON,
     allowNull: true
   },
+  phoneNumber: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  isPartner: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  partnershipPhone: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   resetToken: {
     type: DataTypes.STRING,
     allowNull: true
