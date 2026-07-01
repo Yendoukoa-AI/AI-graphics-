@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AWS Deployment Script for DesignAI Studio
+# AWS Deployment Script for Global DesignAI Studio
 
 echo "🚀 Preparing for AWS Deployment..."
 

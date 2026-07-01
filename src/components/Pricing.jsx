@@ -22,7 +22,7 @@ const Pricing = ({ t, handlePayment }) => {
           <ul>
             <li>{t('price_unlimited_gen')}</li>
             <li>{t('price_photoshop_tools')}</li>
-            <li>HD Export Options</li>
+            <li>{t('price_hd_export')}</li>
             <li>{t('price_priority_support')}</li>
           </ul>
           <div className="payment-options" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

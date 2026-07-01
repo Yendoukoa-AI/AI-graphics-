@@ -15,7 +15,7 @@ currently being supported with security updates.
 
 ## Integrity and Authenticity
 
-To ensure the security of the DesignAI Studio platform, we implement strict integrity checks for all release artifacts.
+To ensure the security of the Global DesignAI Studio platform, we implement strict integrity checks for all release artifacts.
 
 ### SHA-256 Checksums
 Every release package is accompanied by a `.sha256` checksum file. This allows users to verify that the file has not been tampered with or corrupted during transit.

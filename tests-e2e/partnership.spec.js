@@ -15,9 +15,9 @@ test('verify partnership joining flow', async ({ page }) => {
   await expect(page.locator('.auth-modal')).toBeVisible();
 
   // Switch to Register
-  await page.click('text=Don\'t have an account?');
+  await page.locator('.auth-switch').getByRole('button', { name: /Register/i }).click();
 
   // Verify Phone Number field exists
-  await expect(page.locator('label:has-text("Phone Number")')).toBeVisible();
+  await expect(page.getByText(/Phone Number/i)).toBeVisible();
   await expect(page.locator('input[type="tel"]')).toBeVisible();
 });

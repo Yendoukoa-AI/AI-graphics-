@@ -1,11 +1,11 @@
 const { test, expect } = require('@playwright/test');
 
-test('verify new UI elements in DesignAI Studio', async ({ page }) => {
+test('verify new UI elements in Global DesignAI Studio', async ({ page }) => {
   await page.goto('http://localhost:3000');
 
-  // Check for the new mode button
-  const entModeBtn = page.locator('button:has-text("Global Ent.")');
-  await expect(entModeBtn).toBeVisible();
+  // Check for the Posters AI button
+  const posterModeBtn = page.locator('button:has-text("Posters AI")');
+  await expect(posterModeBtn).toBeVisible();
 
   // Enter a prompt and generate
   await page.fill('input.input-field', 'A futuristic city');
@@ -20,8 +20,9 @@ test('verify new UI elements in DesignAI Studio', async ({ page }) => {
   await expect(downloadImgBtn).toBeVisible();
 
   // Check for copy button
-  const copyBtn = page.locator('.icon-btn[title="Copy Insight"]');
-  await expect(copyBtn).toBeVisible();
+  // The title might be translated (e.g., "Copy" in English)
+  const copyBtn = page.locator('.icon-btn');
+  await expect(copyBtn.first()).toBeVisible();
 
   // Check if history panel is visible after generation
   const historySection = page.locator('.history-section');

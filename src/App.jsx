@@ -278,8 +278,8 @@ function App() {
 
   const handleShare = async () => {
     const shareData = {
-      title: 'DesignAI Studio Generation',
-      text: `Check out this ${mode} I generated with DesignAI Studio: ${prompt}`,
+      title: 'Global DesignAI Studio Generation',
+      text: `Check out this ${mode} I generated with Global DesignAI Studio: ${prompt}`,
       url: previewVideo || previewImage || window.location.href,
     };
 
@@ -300,7 +300,7 @@ function App() {
       window.FB.ui({
         method: 'share',
         href: previewVideo || previewImage || window.location.href,
-        quote: `Check out this ${mode} I generated with DesignAI Studio: ${prompt}`,
+        quote: `Check out this ${mode} I generated with Global DesignAI Studio: ${prompt}`,
       }, function(response){});
     } else {
       const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(previewVideo || previewImage || window.location.href)}`;
@@ -443,7 +443,7 @@ function App() {
         gateway,
         amount,
         email: user?.email,
-        planName: 'DesignAI Studio Pro'
+        planName: 'Global DesignAI Studio Pro'
       };
 
       const response = await fetch(`${API_URL}/api/payments/initialize`, {
@@ -752,7 +752,7 @@ function App() {
       return;
     }
 
-    const phone = prompt(t('enter_partnership_phone'), user.phoneNumber || '');
+    const phone = window.prompt(t('enter_partnership_phone'), user.phoneNumber || '');
     if (!phone) return;
 
     try {
@@ -1127,6 +1127,8 @@ function App() {
                         <option value="cinema">{t('mode_cinema')}</option>
                         <option value="music">{t('mode_music')}</option>
                         <option value="art-ai">{t('mode_art_ai')}</option>
+                        <option value="entertainment">{t('mode_entertainment')}</option>
+                        <option value="games">{t('mode_games')}</option>
                       </optgroup>
                       <optgroup label={t('opt_business_tech')}>
                         <option value="ad-creative">{t('mode_ads')}</option>
@@ -1134,6 +1136,12 @@ function App() {
                         <option value="dropshipper">{t('mode_dropshipper')}</option>
                         <option value="finance">{t('mode_finance')}</option>
                         <option value="telecoms">{t('mode_telecoms')}</option>
+                        <option value="sports">{t('mode_sports')}</option>
+                        <option value="health">{t('mode_health')}</option>
+                        <option value="education">{t('mode_education')}</option>
+                        <option value="automotive">{t('mode_automotive')}</option>
+                        <option value="medias">{t('mode_medias')}</option>
+                        <option value="social-networks">{t('mode_social_networks')}</option>
                       </optgroup>
                       <optgroup label={t('opt_advanced_tools')}>
                         <option value="github">{t('mode_github')}</option>

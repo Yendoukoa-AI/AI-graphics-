@@ -2,9 +2,9 @@ import { expect, test } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders DesignAI Studio logo', () => {
+test('renders Global DesignAI Studio logo', () => {
   render(<App />);
-  const logoElements = screen.getAllByText(/DesignAI Studio/i);
+  const logoElements = screen.getAllByText(/Global DesignAI Studio/i);
   expect(logoElements.length).toBeGreaterThan(0);
 });
 
