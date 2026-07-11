@@ -19,7 +19,7 @@
     "@huggingface/inference": "^4.13.19",
     "@langchain/anthropic": "^1.4.1",
     "@langchain/google-genai": "^2.1.31",
-    "@langchain/google-vertexai": "^2.1.31",
+    "@langchain/google-vertexai": "^2.2.0",
     "@langchain/openai": "^1.4.7",
     "@supabase/supabase-js": "^2.108.2",
     "axios": "^1.18.0",
